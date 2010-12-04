@@ -1,6 +1,8 @@
 import wx
 import os
 
+from tablepanel import *
+
 class MainWindow(wx.Frame):
     def __init__(self, parent, title):
         self.dirname=''
@@ -13,7 +15,7 @@ class MainWindow(wx.Frame):
 
         # Setting up the menu.
         filemenu= wx.Menu()
-        menuOpen = filemenu.Append(wx.ID_OPEN, "&Open"," Open a file to edit")
+        #menuOpen = filemenu.Append(wx.ID_OPEN, "&Open"," Open a file to edit")
         menuAbout= filemenu.Append(wx.ID_ABOUT, "&About"," Information about this simulator")
         menuExit = filemenu.Append(wx.ID_EXIT,"E&xit"," Terminate the simulator")
 
@@ -23,10 +25,14 @@ class MainWindow(wx.Frame):
         self.SetMenuBar(menuBar)  # Adding the MenuBar to the Frame content.
 
         # Events.
-        self.Bind(wx.EVT_MENU, self.OnOpen, menuOpen)
+        #self.Bind(wx.EVT_MENU, self.OnOpen, menuOpen)
         self.Bind(wx.EVT_MENU, self.OnExit, menuExit)
         self.Bind(wx.EVT_MENU, self.OnAbout, menuAbout)
 
+        # Table image
+        TablePanel(self, -1)
+
+        # Dummy buttons - to be removed if not used
         self.sizer2 = wx.BoxSizer(wx.HORIZONTAL)
         self.buttons = []
         for i in range(0, 2):
@@ -46,7 +52,8 @@ class MainWindow(wx.Frame):
 
     def OnAbout(self,e):
         # Create a message dialog box
-        dlg = wx.MessageDialog(self, " A simulator for table top manipulation \n in wxPython", "Table top 2D simulator", wx.OK)
+        credits = "\n\n\n\tRam Kumar Hariharan\n\tKaushik Subramanium\n\tKelsey Hawkins\n"
+        dlg = wx.MessageDialog(self, " A simulator for table manipulation \n in wxPython %s" % credits, "Table manipulation 2D simulator", wx.OK)
         dlg.ShowModal() # Shows it
         dlg.Destroy() # finally destroy it when finished.
 
@@ -65,5 +72,5 @@ class MainWindow(wx.Frame):
         dlg.Destroy()
 
 app = wx.App(False)
-frame = MainWindow(None, "Table top 2D simulator - clutter table manipulation")
+frame = MainWindow(None, "Table 2D simulator - clutter table manipulation")
 app.MainLoop()
