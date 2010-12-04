@@ -17,13 +17,19 @@ class TablePanel(wx.Panel):
         self.dc.SetPen(wx.Pen(wx.Colour(133, 94, 66),style=wx.TRANSPARENT))
         self.dc.SetBrush(wx.Brush(wx.Colour(133, 94, 66), wx.SOLID))
         # set x, y, w, h for rectangle
-        self.dc.DrawRectangle(0, 0, 400, 400)
+        tableX = 50
+        tableZ = 300
+        self.dc.DrawRectangle(tableX, tableZ, 300, 20)
+        self.dc.DrawRectangle(100, 320, 20, 80)
+        self.dc.DrawRectangle(280, 320, 20, 80)
 
         # Draw Table Objects
         tableinfo = TableInfo()
         for i in range(0, tableinfo.numobjects):
             self.dc.SetBrush(wx.Brush(tableinfo.colors[i], wx.SOLID))
-            self.dc.DrawRectangle(tableinfo.positions[i][0], tableinfo.positions[i][1], tableinfo.dimensions[i][0], tableinfo.dimensions[i][1])
+            objectX = tableX + tableinfo.positions[i][0]
+            objectZ = tableZ - tableinfo.positions[i][1] - tableinfo.dimensions[i][1]
+            self.dc.DrawRectangle(objectX, objectZ, tableinfo.dimensions[i][0], tableinfo.dimensions[i][1])
 
         self.dc.EndDrawing()
 

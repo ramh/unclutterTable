@@ -35,9 +35,13 @@ class MainWindow(wx.Frame):
         # Dummy buttons - to be removed if not used
         self.sizer2 = wx.BoxSizer(wx.HORIZONTAL)
         self.buttons = []
-        for i in range(0, 2):
-            self.buttons.append(wx.Button(self, -1, "Button &"+str(i)))
-            self.sizer2.Add(self.buttons[i], 1, wx.EXPAND)
+        self.buttons.append(wx.Button(self, -1, "Solve"))
+        self.checkboxes = []
+        self.checkboxes.append(wx.CheckBox(self, 1, "Simple POMDP"))
+        for chkbox in self.checkboxes:
+            self.sizer2.Add(chkbox, 1, wx.EXPAND)
+        for button in self.buttons:
+            self.sizer2.Add(button, 1, wx.EXPAND)
 
         # Use some sizers to see layout options
         self.sizer = wx.BoxSizer(wx.VERTICAL)
@@ -52,7 +56,7 @@ class MainWindow(wx.Frame):
 
     def OnAbout(self,e):
         # Create a message dialog box
-        credits = "\n\n\n\tRam Kumar Hariharan\n\tKaushik Subramanium\n\tKelsey Hawkins\n"
+        credits = "\n\n\n\tRam Kumar Hariharan\n\tKaushik Subramaniam\n\tKelsey Hawkins\n"
         dlg = wx.MessageDialog(self, " A simulator for table manipulation \n in wxPython %s" % credits, "Table manipulation 2D simulator", wx.OK)
         dlg.ShowModal() # Shows it
         dlg.Destroy() # finally destroy it when finished.
