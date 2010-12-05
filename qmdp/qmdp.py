@@ -8,6 +8,7 @@ class TableObject():
     def __init__(self, o_id, obs, is_p, has_m, graspab):
         self.obj_id = o_id
         self.obstructors = obs
+        self.obstructing = []
         self.is_potential = is_p
         self.has_moved = has_m
         self.graspability = graspab
@@ -36,6 +37,8 @@ class TableState():
         for obj in self.table_objects:
             if not obj.has_moved:
                 self.objs_not_moved.add(obj.obj_id)
+            for obst in obj.obstructors:
+                obst.obstructing.append(obj)
         self.from_actions = []
         self.to_actions = []
 
@@ -201,7 +204,7 @@ class MDP():
     def q_mdp_policy(self, ind, b, e=1):
         N = len(self.world.table_states[0].table_objects)
         q_list = []
-        for i in range(N):
+        for i in range(N+1):
             V = self.value_iteration(i)
             if i == self.goal_ind:
                 r = self.goal_reward
@@ -212,11 +215,36 @@ class MDP():
 
         return self.succ_acts(ind)[np.argmax(sum(q_list))], zip(*[self.succ_acts(ind), sum(q_list).tolist()])
 
-    def print_Q(self, Q, b):
-        for i in range(len(b)):
-            print i, "belief:", "%1.2f" % (b[i])
-        for i, q in enumerate(Q):
-            print i, "%3.2f" % q, [(mdp.world.table_actions[act_ind].state_final_list[0][1].state_id, "%1.2f" % (mdp.world.table_actions[act_ind].state_final_list[0][0]), "%3.1f" % (self.Q_policy(Q, mdp.world.table_actions[act_ind].state_final_list[0][1].state_id, b))) for act_ind in mdp.succ_acts(i)]
+    def bayes_update(self, b, act_ind, z, recog_prob = 0.9):
+        ret_b = b.copy()
+        for j, b_j in enumerate(b):
+            recog_joint = 1.0
+            for z_val in z:
+                if z_val:
+                    recog_joint *= recog_prob
+                else:
+                    recog_joint *= 1. - recog_prob
+            act = self.world.table_actions[act_ind]
+            trans_prob = act.state_final_list[0][0]
+            ret_b *= recog_joint * trans_prob
+            ret_b[j]
+            c_sum = 0.
+            for ps in act.state_final_list:
+                c_sum += ps[0] * b[ps[1].state_id]
+
+    def expected_info_gain(self):
+            act = self.world.table_actions[act_ind]
+            trans_prob = act.state_final_list[0][0]
+            inds_moved = act.state_init.objs_not_moved - act.state_final_list[0][1].objs_not_moved
+            rem_obj_ind = inds_moved[0]
+            num_z = len(rem_obj_ind.obstructing)
+
+
+#   def print_Q(self, Q, b):
+#       for i in range(len(b)):
+#           print i, "belief:", "%1.2f" % (b[i])
+#       for i, q in enumerate(Q):
+#           print i, "%3.2f" % q, [(mdp.world.table_actions[act_ind].state_final_list[0][1].state_id, "%1.2f" % (mdp.world.table_actions[act_ind].state_final_list[0][0]), "%3.1f" % (self.Q_policy(Q, mdp.world.table_actions[act_ind].state_final_list[0][1].state_id, b))) for act_ind in mdp.succ_acts(i)]
 
 def normalize(b):
     return b / np.linalg.norm(b)
@@ -225,7 +253,7 @@ goal_ind = 20
 mdp = MDP(table_world)
 V = mdp.value_iteration(goal_ind, 1)
 mdp.print_V(V, goal_ind)
-b = normalize(np.ones(len(init_table_objects)))
+b = normalize(np.ones(len(init_table_objects)+1))
 # Q = mdp.q_mdp(b)
 # mdp.print_Q(Q, b)
 for i in range(len(V)-1):
