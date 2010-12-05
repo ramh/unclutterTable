@@ -1,7 +1,9 @@
 import wx
 import os
 
-from tablepanel import *
+from tablefrontpanel import *
+from tabletoppanel import *
+from manipulator import *
 
 class MainWindow(wx.Frame):
     def __init__(self, parent, title):
@@ -29,24 +31,15 @@ class MainWindow(wx.Frame):
         self.Bind(wx.EVT_MENU, self.OnExit, menuExit)
         self.Bind(wx.EVT_MENU, self.OnAbout, menuAbout)
 
-        # Table image
-        TablePanel(self, -1)
-
-        # Dummy buttons - to be removed if not used
-        self.sizer2 = wx.BoxSizer(wx.HORIZONTAL)
-        self.buttons = []
-        self.buttons.append(wx.Button(self, -1, "Solve"))
-        self.checkboxes = []
-        self.checkboxes.append(wx.CheckBox(self, 1, "Simple POMDP"))
-        for chkbox in self.checkboxes:
-            self.sizer2.Add(chkbox, 1, wx.EXPAND)
-        for button in self.buttons:
-            self.sizer2.Add(button, 1, wx.EXPAND)
-
         # Use some sizers to see layout options
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.sizer.Add(self.control, 1, wx.EXPAND)
-        self.sizer.Add(self.sizer2, 0, wx.EXPAND)
+
+        # Table image
+        self.drawTable()
+
+        # Toolbox
+        self.drawToolBox()
 
         #Layout sizers
         self.SetSizer(self.sizer)
@@ -54,9 +47,24 @@ class MainWindow(wx.Frame):
         #self.sizer.Fit(self)
         self.Show()
 
+    def drawTable(self):
+        TableFrontPanel(self, 1, pos=(0,100))
+        TableTopPanel(self, 2, pos=(400, 100))
+
+    def drawToolBox(self):
+        self.buttons = []
+        self.toolbox = wx.BoxSizer(wx.HORIZONTAL)
+        for i in range(0, tableinfo.numobjects):
+            buttonRemove = wx.Button(self, i, "Remove Object %d(%s)" % (i , tableinfo.colors[i]))
+            self.Bind(wx.EVT_BUTTON, self.OnRemove, buttonRemove)
+            self.buttons.append(buttonRemove)
+            self.toolbox.Add(buttonRemove, 1, wx.EXPAND)
+        self.sizer.Add(self.toolbox, 0, wx.EXPAND)
+
+    # All Event Handling here
     def OnAbout(self,e):
         # Create a message dialog box
-        credits = "\n\n\n\tRam Kumar Hariharan\n\tKaushik Subramaniam\n\tKelsey Hawkins\n"
+        credits = "\n\n\n\tRam Kumar Hariharan\n\tKaushik Subramanian\n\tKelsey Hawkins\n"
         dlg = wx.MessageDialog(self, " A simulator for table manipulation \n in wxPython %s" % credits, "Table manipulation 2D simulator", wx.OK)
         dlg.ShowModal() # Shows it
         dlg.Destroy() # finally destroy it when finished.
@@ -75,6 +83,14 @@ class MainWindow(wx.Frame):
             f.close()
         dlg.Destroy()
 
+    def OnRemove(self, e):
+        objId = e.GetEventObject().GetId()
+        index = tableinfo.ids.index(objId)
+        Manipulator.removeObject(index)
+        self.buttons[objId].Hide()
+        self.drawTable()
+
 app = wx.App(False)
 frame = MainWindow(None, "Table 2D simulator - clutter table manipulation")
 app.MainLoop()
+
