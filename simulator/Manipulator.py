@@ -1,4 +1,4 @@
-from tableinfo import *
+from TableInfo import *
 
 class Manipulator:
     @staticmethod

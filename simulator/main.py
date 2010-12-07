@@ -1,16 +1,14 @@
 import wx
 import os
 
-from tablefrontpanel import *
-from tabletoppanel import *
-from manipulator import *
+from TableFrontPanel import *
+from TableTopPanel import *
+from DetailsPanel import *
+from Manipulator import *
 
 class MainWindow(wx.Frame):
     def __init__(self, parent, title):
         self.dirname=''
-
-        # A "-1" in the size parameter instructs wxWidgets to use the default size.
-        # In this case, we select 200px width and the default height.
         wx.Frame.__init__(self, parent, title=title, size=(800,600))
         self.control = wx.TextCtrl(self, style=wx.TE_MULTILINE)
         self.CreateStatusBar() # A Statusbar in the bottom of the window
@@ -50,6 +48,7 @@ class MainWindow(wx.Frame):
     def drawTable(self):
         TableFrontPanel(self, 1, pos=(0,100))
         TableTopPanel(self, 2, pos=(400, 100))
+        DetailsPanel(self, 3, pos=(0, 0))
 
     def drawToolBox(self):
         self.buttons = []
