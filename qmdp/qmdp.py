@@ -8,7 +8,6 @@ from state_rep import *
 class MDP():
     def __init__(self, t_world, g_cost = -1., goal_rew = 10., disc=0.9):
         self.world = t_world
-        self.goal_ind = goal_ind
         self.grasp_cost = g_cost
         self.goal_reward = goal_rew
         self.discount = disc
@@ -28,7 +27,7 @@ class MDP():
             _V = V.copy()
             d = 0
             for i in range(len(V)):
-                if i == self.goal_ind:
+                if i == goal_ind:
                     r = self.goal_reward
                 else:
                     r = self.grasp_cost
@@ -44,8 +43,8 @@ class MDP():
                 break
         return V
 
-    def V_policy(self, V, st_ind):
-        if i == self.goal_ind:
+    def V_policy(self, V, st_ind, goal_ind):
+        if i == goal_ind:
             r = self.goal_reward
         else:
             r = self.grasp_cost
@@ -55,72 +54,102 @@ class MDP():
     def print_V(self, V, goal_ind):
         for i, v in enumerate(V):
             if i == goal_ind:
-                print i, "%3.2f" % v, [(mdp.world.table_actions[act_ind].state_final_list[0][1].state_id, "%1.2f" % (mdp.world.table_actions[act_ind].state_final_list[0][0])) for act_ind in mdp.succ_acts(i)], "**** Goal ****"
+                print i, "%3.2f" % v, [(self.world.table_actions[act_ind].state_final_list[0][1].state_id, "%1.2f" % (self.world.table_actions[act_ind].state_final_list[0][0])) for act_ind in self.succ_acts(i)], "**** Goal ****"
             else:
-                print i, "%3.2f" % v, [(mdp.world.table_actions[act_ind].state_final_list[0][1].state_id, "%1.2f" % (mdp.world.table_actions[act_ind].state_final_list[0][0])) for act_ind in mdp.succ_acts(i)]
+                print i, "%3.2f" % v, [(self.world.table_actions[act_ind].state_final_list[0][1].state_id, "%1.2f" % (self.world.table_actions[act_ind].state_final_list[0][0])) for act_ind in self.succ_acts(i)]
 
     def q_mdp_policy(self, ind, b, e=1):
         N = len(self.world.table_states[0].table_objects)
         q_list = []
         for i in range(N+1):
             V = self.value_iteration(i)
-            if i == self.goal_ind:
-                r = self.goal_reward
-            else:
-                r = self.grasp_cost
+#           if i == goal_ind:
+#               r = self.goal_reward
+#           else:
+#               r = self.grasp_cost
+            r = self.grasp_cost
             cur_q = np.array([r + sum(V * self.succ_probs(ind, a_i)) for a_i in self.succ_acts(ind)])
             q_list.append(cur_q * b[i])
 
         return self.succ_acts(ind)[np.argmax(sum(q_list))], zip(*[self.succ_acts(ind), sum(q_list).tolist()])
 
     def obs_func(self, obs, tbl_st, goal_ind, tpr = 0.9, fpr = 0.2):
-        num_uncov = 
-        goal_uncov = True
-        if not goal_uncov:
-            if 
+        # observation function p(z|x)
+        # obs recognized object (obs) as the goal object
+        # goal_ind index of the goal object
+        num_uncov = sum([len(obj.obstructors) == 0 for obj in tbl_st.table_objects])
+        if goal_ind != -1: 
+            goal_uncov = len(tbl_st.table_objects[goal_ind].obstructors) == 0
+            if not goal_uncov:
+                if obs == -1:
+                    return 1.
+                else:
+                    return 0.
+        # c = (1. - fpr) ** (num_uncov - 1)
+        c = 1.
         if obs != -1:
            if goal_ind != -1:
-               if goal_uncov:
-
+               if obs == goal_ind:
+                   return tpr * c
                else:
-
-
-               prob = tpr * (1. - fpr) ** (num_uncov - 1)
+                   return (1. - tpr) * c
            else:
-
+               return fpr * c
         else:
            if goal_ind != -1:
-               
+               return (1. - tpr) * c
            else:
+               return (1. - fpr) * c
 
-        return prob
-        
-        
-
-    def bayes_update(self, b, act_ind, z, recog_prob = 0.9):
+    def bayes_filter(self, b, act_ind, obs, recog_prob = 0.9):
+        # only for successful action
         ret_b = b.copy()
-        for j, b_j in enumerate(b):
-            recog_joint = 1.0
-            for z_val in z:
-                if z_val:
-                    recog_joint *= recog_prob
-                else:
-                    recog_joint *= 1. - recog_prob
-            act = self.world.table_actions[act_ind]
-            trans_prob = act.state_final_list[0][0]
-            ret_b *= recog_joint * trans_prob
-            ret_b[j]
-            c_sum = 0.
-            for ps in act.state_final_list:
-                c_sum += ps[0] * b[ps[1].state_id]
+        act = self.world.table_actions[act_ind]
+        new_st = act.state_final_list[0][1]
+        for j, b_j in enumerate(b[0:-1]):
+#           recog_joint = 1.0
+#           for z_val in z:
+#               if z_val:
+#                   recog_joint *= recog_prob
+#               else:
+#                   recog_joint *= 1. - recog_prob
+#           trans_prob = act.state_final_list[0][0]
+#           ret_b *= recog_joint * trans_prob
 
-    def expected_info_gain(self):
-            act = self.world.table_actions[act_ind]
-            trans_prob = act.state_final_list[0][0]
-            inds_moved = act.state_init.objs_not_moved - act.state_final_list[0][1].objs_not_moved
-            rem_obj_ind = inds_moved[0]
-            num_z = len(rem_obj_ind.obstructing)
+            obs_prob = self.obs_func(obs, new_st, j)
 
+            ret_b[j] *= obs_prob
+#           c_sum = 0.
+#           for ps in act.state_final_list:
+#               c_sum += ps[0] * b[ps[1].state_id]
+        ret_b[-1] *= self.obs_func(obs, new_st, -1)
+        return normalize(ret_b)
+
+    def conditional_entropy(self, b, act_ind, obs, new_b=None):
+        if new_b is None:
+            new_b = self.bayes_filter(b, act_ind, obs)
+        temp = new_b * np.log(new_b)
+        temp2 = [0. if np.isnan(t) else t for t in temp]
+        return -sum(temp2)
+
+    def expected_info_gain(self, ind, b, alpha = 0.8):
+        tbl_st = self.world.table_states[ind]
+
+        act_values = []
+        for act in tbl_st.from_actions:
+            # reward = np.ones(len(b)) * self.grasp_cost
+            pos_obs = range(len(b)-1) + [-1]
+            # this is hacked only to work with grasp action-failure world
+            trans_prob = act.state_final_list[0][0]
+            new_st = act.state_final_list[0][1]
+            inner = 0.
+            for obs in pos_obs:
+                for goal_ind in pos_obs:
+                    grasp_succ = self.conditional_entropy(b, act.action_id, obs) * self.obs_func(obs, new_st, goal_ind) * trans_prob
+                    grasp_fail = self.conditional_entropy(b, act.action_id, obs, new_b=b) * self.obs_func(obs, tbl_st, goal_ind) * (1. - trans_prob)
+                    inner += grasp_succ + grasp_fail
+            act_values.append(sum((self.grasp_cost - alpha * inner) * np.array(b)))
+        return tbl_st.from_actions[np.argmax(act_values)].action_id, act_values
 
 #   def print_Q(self, Q, b):
 #       for i in range(len(b)):

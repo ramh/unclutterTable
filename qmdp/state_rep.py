@@ -5,17 +5,19 @@ from math import fabs
 import copy
 
 class TableObject():
-    def __init__(self, o_id, obs, is_p, has_m, graspab):
+    def __init__(self, o_id, obs, is_p, has_m, c_grasp, f_grasp):
         self.obj_id = o_id
         self.obstructors = obs
         self.obstructing = []
         self.is_potential = is_p
         self.has_moved = has_m
-        self.graspability = graspab
+        self.cur_grasp = c_grasp
+        self.unobs_grasp = f_grasp
     def __str__(self):
         return ("Obj ID: " + str(self.obj_id) + "\n\t" +
                 "Has moved: " + str(self.has_moved) + "\n\t" + 
-                "Graspability: " + str(self.graspability) + "\n\t" +
+                "Current Graspability: " + str(self.cur_grasp) + "\n\t" +
+                "Unobstructed Graspability: " + str(self.unobs_grasp) + "\n\t" +
                 "Is Potential: " + str(self.is_potential) + "\n\t" +
                 "Obstructors: " + ", ".join([str(obs.obj_id) for obs in self.obstructors]) + "\n")
 
@@ -69,7 +71,7 @@ class TableWorld():
 def make_potential_objs(v_objs):
     ret_objs = []
     for obj in v_objs:
-        ret_objs.append(TableObject(obj.obj_id + len(v_objs), [obj], True, False, 0.0))
+        ret_objs.append(TableObject(obj.obj_id + len(v_objs), [obj], True, False, 0.0, 1.0))
     return ret_objs
 
 def table_world_generator(vis_objs):
@@ -122,7 +124,12 @@ def table_world_generator(vis_objs):
                         cur_level.append(new_state)
 
                     # Create action
-                    sf_acts = [ [ obj.graspability, new_state ], [ 1. - obj.graspability, table_state ] ]
+                    if len(new_tbl_objs[rem_i].obstructors) == 0:
+                        graspability = obj.cur_grasp
+                    else:
+                        graspability = obj.unobs_grasp
+
+                    sf_acts = [ [ graspability, new_state ], [ 1. - graspability, table_state ] ]
                     act = TableAction(table_state, sf_acts)
                     table_state.from_actions.append(act)
                     table_state.to_actions.append(act)
@@ -136,5 +143,5 @@ def table_world_generator(vis_objs):
     return TableWorld(len(tbl_objs), all_states, all_actions)
 
 def normalize(b):
-    return b / np.linalg.norm(b)
+    return b / np.linalg.norm(b, 1)
 
