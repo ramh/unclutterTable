@@ -24,10 +24,13 @@ V = mdp.value_iteration(goal_ind, 1)
 mdp.print_V(V, goal_ind)
 b = normalize(np.ones(2 * len(vis_objs)+1))
 print "b", b
+simulation_no_find(mdp, b, mdp.q_mdp_policy)
+simulation_no_find(mdp, b, mdp.expected_info_gain)
+
 # Q = mdp.q_mdp(b)
 # mdp.print_Q(Q, b)
-for i in range(len(V)-1):
+# for i in range(len(V)-1):
 #     print i, mdp.q_mdp_policy(i, b)
-    print i, mdp.expected_info_gain(i, b)
-    print "   ", mdp.q_mdp_policy(i, b)
+#     print i, mdp.expected_info_gain(i, b)
+#     print "   ", mdp.q_mdp_policy(i, b)
 

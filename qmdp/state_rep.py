@@ -28,7 +28,7 @@ class TableAction():
         self.state_final_list = sf_list
         self.reward = -1.0
     def __str__(self):
-        return ("Init state: " + str(self.state_init.state_id) + "\n" +
+        return ("Init state: " + str(self.state_init.state_id) + " " +
                 "Final states: "+ ", ".join([ "[%1.2f %s]" % (pa[0], pa[1].state_id) for pa in self.state_final_list]))
 
 class TableState():

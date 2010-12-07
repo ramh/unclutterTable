@@ -6,7 +6,7 @@ import copy
 from state_rep import *
 
 class MDP():
-    def __init__(self, t_world, g_cost = -1., goal_rew = 10., disc=0.9):
+    def __init__(self, t_world, g_cost = -1., goal_rew = 10., disc=0.95):
         self.world = t_world
         self.grasp_cost = g_cost
         self.goal_reward = goal_rew
@@ -144,6 +144,8 @@ class MDP():
             new_st = act.state_final_list[0][1]
             inner = 0.
             for obs in pos_obs:
+                # print "previous entropy:", obs, self.conditional_entropy(b, act.action_id, obs, new_b=b)
+                # print "current entropy:", obs, self.conditional_entropy(b, act.action_id, obs)
                 for goal_ind in pos_obs:
                     grasp_succ = self.conditional_entropy(b, act.action_id, obs) * self.obs_func(obs, new_st, goal_ind) * trans_prob
                     grasp_fail = self.conditional_entropy(b, act.action_id, obs, new_b=b) * self.obs_func(obs, tbl_st, goal_ind) * (1. - trans_prob)
@@ -151,8 +153,37 @@ class MDP():
             act_values.append(sum((self.grasp_cost - alpha * inner) * np.array(b)))
         return tbl_st.from_actions[np.argmax(act_values)].action_id, act_values
 
-#   def print_Q(self, Q, b):
-#       for i in range(len(b)):
-#           print i, "belief:", "%1.2f" % (b[i])
-#       for i, q in enumerate(Q):
-#           print i, "%3.2f" % q, [(mdp.world.table_actions[act_ind].state_final_list[0][1].state_id, "%1.2f" % (mdp.world.table_actions[act_ind].state_final_list[0][0]), "%3.1f" % (self.Q_policy(Q, mdp.world.table_actions[act_ind].state_final_list[0][1].state_id, b))) for act_ind in mdp.succ_acts(i)]
+def simulation_no_find(mdp, b_init, method):
+    import random
+    cur_ind = 0
+    if method == mdp.q_mdp_policy:
+        print "-" * 26, "QMDP", "-" * 26
+    else:
+        print "-" * 20, "Expected Entropy", "-" * 20
+    b = b_init.copy()
+    last_b = b.copy()
+    print "Initial belief:", "[", ", ".join(["%1.2f" % (np.log(b_i)) for b_i in b]), "]"
+    while cur_ind != (len(mdp.world.table_states) - 1):
+        act_id, vals = method(cur_ind, b)
+        act = mdp.world.table_actions[act_id]
+        print "Action %d taken.  <%s>" % (act_id, act)
+        # we will always succeed
+        prob = act.state_final_list[0][0]
+        print "\tProbability of success: %1.2f" % (prob)
+        new_st = act.state_final_list[0][1]
+        print "\tNow in state %d" % (new_st.state_id)
+        cur_ind = new_st.state_id
+        last_b = b.copy()
+        b = mdp.bayes_filter(b, act_id, -1) # no goal object seen
+        print "\tNew belief:", "[", ", ".join(["%1.2f" % (np.log(b_i)) for b_i in b]), "]"
+        print "\tEntropy Difference: %1.4f" % (entropy_difference(last_b, b))
+
+def entropy_difference(b_init, b_final):
+    temp = b_init * np.log(b_init)
+    temp2 = [0. if np.isnan(t) else t for t in temp]
+    entropy1 = -sum(temp2)
+    temp = b_final * np.log(b_final)
+    temp2 = [0. if np.isnan(t) else t for t in temp]
+    entropy2 = -sum(temp2)
+    return entropy1 - entropy2
+
