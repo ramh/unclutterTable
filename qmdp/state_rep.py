@@ -23,12 +23,13 @@ class TableObject():
 
 
 class TableAction():
-    def __init__(self, si, sf_list):
+    def __init__(self, obj_rem, si, sf_list):
+        self.obj_rem = obj_rem
         self.state_init = si
         self.state_final_list = sf_list
         self.reward = -1.0
     def __str__(self):
-        return ("Init state: " + str(self.state_init.state_id) + " " +
+        return ("Object removed: %d " % (self.obj_rem) + "Init state: " + str(self.state_init.state_id) + " " +
                 "Final states: "+ ", ".join([ "[%1.2f %s]" % (pa[0], pa[1].state_id) for pa in self.state_final_list]))
 
 class TableState():
@@ -70,8 +71,9 @@ class TableWorld():
         
 def make_potential_objs(v_objs):
     ret_objs = []
+    max_id = max([o.obj_id for o in v_objs])
     for obj in v_objs:
-        ret_objs.append(TableObject(obj.obj_id + len(v_objs), [obj], True, False, 0.0, 1.0))
+        ret_objs.append(TableObject(obj.obj_id + max_id + 1, [obj], True, False, 0.0, 1.0))
     return ret_objs
 
 def table_world_generator(vis_objs):
@@ -130,7 +132,7 @@ def table_world_generator(vis_objs):
                         graspability = obj.unobs_grasp
 
                     sf_acts = [ [ graspability, new_state ], [ 1. - graspability, table_state ] ]
-                    act = TableAction(table_state, sf_acts)
+                    act = TableAction(rem_i, table_state, sf_acts)
                     table_state.from_actions.append(act)
                     table_state.to_actions.append(act)
                     new_state.to_actions.append(act)
