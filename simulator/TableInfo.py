@@ -43,6 +43,8 @@ class TableInfo:
             self.colors = ["green", "yellow", "red"]
             self.full_occ_list = [ [], [], [] ]
             self.part_occ_list = [ [], [], [1] ]
+            self.c_grasps = [0.7, 0.8, 0.2 ]
+            self.f_grasps = [0.7, 0.8, 0.7 ]
             self.latticeids = range(1, self.numobjects+1)
         elif configId == 2: # Simple Vertical Stacking
             self.numobjects = 5
@@ -52,6 +54,8 @@ class TableInfo:
             self.colors = ["yellow", "blue", "green", "yellow", "blue"]
             self.full_occ_list = [ [1, 2], [2], [], [4], [] ]
             self.part_occ_list = [ [1, 2], [2], [], [4], [] ]
+            self.c_grasps = [ 0.9, 0.8, 0.7, 0.8]
+            self.f_grasps = [ 0.9, 0.8, 0.7, 0.7]
             self.latticeids = range(1, self.numobjects+1)
         elif configId == 3: # Simple Horizontal Stacking
             self.numobjects = 5
@@ -61,8 +65,27 @@ class TableInfo:
             self.colors = ["yellow", "blue", "green", "yellow", "blue"]
             self.full_occ_list = [ [], [], [], [], [] ]
             self.part_occ_list = [ [], [], [], [], [] ]
+            self.c_grasps = [ 0.9, 0.9, 0.7, 0.9, 0.7]
+            self.f_grasps = [  0.9, 0.9, 0.7, 0.9, 0.7]
             self.latticeids = range(1, self.numobjects+1)
 
+    def get_current_config(self):
+        tbl_objs = []
+        tbl_inds = []
+        for i in range(self.numobjects):
+            if len(self.full_occ_list[i]) != 0:
+                continue
+
+            new_tbl_obj = TableObject(self.latticeids[i], self.part_occ_list[i], False, False, self.c_grasps[i], self.f_grasps[i])
+            tbl_objs.append(new_tbl_obj)
+            tbl_inds.append(i)
+
+        for n_obj in tbl_objs:
+            n_obsts = []
+            for o_obst in n_obj.obstructors:
+                n_obsts.append(tbl_objs[tbl_inds.index(o_obst)])
+            n_obj.obstructors = n_obsts
+        return tbl_objs
 
     def sortonY(self):
         for i in range(0, len(self.positions)-1):
@@ -72,8 +95,11 @@ class TableInfo:
                     tmp = self.dimensions[i]; self.dimensions[i] = self.dimensions[j]; self.dimensions[j] = tmp
                     tmp = self.colors[i]; self.colors[i] = self.colors[j]; self.colors[j] = tmp
                     tmp = self.ids[i]; self.ids[i] = self.ids[j]; self.ids[j] = tmp
-                    if len(self.latticeids) > 0:
-                        tmp = self.latticeids[i]; self.latticeids[i] = self.latticeids[j]; self.latticeids[j] = tmp
+                    tmp = self.full_occ_list[i]; self.full_occ_list[i] = self.full_occ_list[j]; self.full_occ_list[j] = tmp
+                    tmp = self.part_occ_list[i]; self.part_occ_list[i] = self.part_occ_list[j]; self.part_occ_list[j] = tmp
+                    tmp = self.c_grasps[i]; self.c_grasps[i] = self.c_grasps[j]; self.c_grasps[j] = tmp
+                    tmp = self.f_grasps[i]; self.f_grasps[i] = self.f_grasps[j]; self.f_grasps[j] = tmp
+                    tmp = self.latticeids[i]; self.latticeids[i] = self.latticeids[j]; self.latticeids[j] = tmp
 
     def sortonZ(self):
         for i in range(0, len(self.positions)-1):
@@ -83,8 +109,11 @@ class TableInfo:
                     tmp = self.dimensions[i]; self.dimensions[i] = self.dimensions[j]; self.dimensions[j] = tmp
                     tmp = self.colors[i]; self.colors[i] = self.colors[j]; self.colors[j] = tmp
                     tmp = self.ids[i]; self.ids[i] = self.ids[j]; self.ids[j] = tmp
-                    if len(self.latticeids) > 0:
-                        tmp = self.latticeids[i]; self.latticeids[i] = self.latticeids[j]; self.latticeids[j] = tmp
+                    tmp = self.full_occ_list[i]; self.full_occ_list[i] = self.full_occ_list[j]; self.full_occ_list[j] = tmp
+                    tmp = self.part_occ_list[i]; self.part_occ_list[i] = self.part_occ_list[j]; self.part_occ_list[j] = tmp
+                    tmp = self.c_grasps[i]; self.c_grasps[i] = self.c_grasps[j]; self.c_grasps[j] = tmp
+                    tmp = self.f_grasps[i]; self.f_grasps[i] = self.f_grasps[j]; self.f_grasps[j] = tmp
+                    tmp = self.latticeids[i]; self.latticeids[i] = self.latticeids[j]; self.latticeids[j] = tmp
 
     def printConf(self):
         print "Numobjects : %s" % self.numobjects
@@ -97,3 +126,4 @@ class TableInfo:
 tableinfo = TableInfo(configId=2)
 #tableinfo = TableInfo()
 
+print tableinfo.get_current_config()
