@@ -13,6 +13,10 @@ class Manipulator:
         tableinfo.latticeids.pop(index)
 
         for pol in tableinfo.part_occ_list:
-            pol.remove(objId)
+            if pol.count(objId) > 0:
+                pol.remove(objId)
         for fol in tableinfo.full_occ_list:
-            fol.remove(objId)
+            if fol.count(objId) > 0:
+                fol.remove(objId)
+
+        tableinfo.printVisibleConf()

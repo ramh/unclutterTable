@@ -1,5 +1,7 @@
 """ Configuration of the table state from FRONT VIEW """
 import random
+import sys
+from qmdp.state_rep import TableObject
 
 class TableInfo:
     def __init__(self, configId=0):
@@ -54,8 +56,8 @@ class TableInfo:
             self.colors = ["yellow", "blue", "green", "yellow", "blue"]
             self.full_occ_list = [ [1, 2], [2], [], [4], [] ]
             self.part_occ_list = [ [1, 2], [2], [], [4], [] ]
-            self.c_grasps = [ 0.9, 0.8, 0.7, 0.8]
-            self.f_grasps = [ 0.9, 0.8, 0.7, 0.7]
+            self.c_grasps = [ 0.9, 0.8, 0.7, 0.9, 0.8]
+            self.f_grasps = [ 0.9, 0.8, 0.7, 0.9, 0.8]
             self.latticeids = range(1, self.numobjects+1)
         elif configId == 3: # Simple Horizontal Stacking
             self.numobjects = 5
@@ -69,14 +71,14 @@ class TableInfo:
             self.f_grasps = [  0.9, 0.9, 0.7, 0.9, 0.7]
             self.latticeids = range(1, self.numobjects+1)
 
-    def get_current_config(self):
+    def get_visible_config(self):
         tbl_objs = []
         tbl_inds = []
         for i in range(self.numobjects):
             if len(self.full_occ_list[i]) != 0:
                 continue
-
             new_tbl_obj = TableObject(self.latticeids[i], self.part_occ_list[i], False, False, self.c_grasps[i], self.f_grasps[i])
+
             tbl_objs.append(new_tbl_obj)
             tbl_inds.append(i)
 
@@ -122,8 +124,14 @@ class TableInfo:
         print "Dimensions : %s" % self.dimensions
         print "Colors: %s" % self.colors
 
-# Instantiate TableInfo
-tableinfo = TableInfo(configId=2)
-#tableinfo = TableInfo()
+    def printVisibleConf(self):
+        if len(tableinfo.get_visible_config()) == 0:
+            print "No Objects present"
+        else:
+            print "Objects are:"
+            for config in tableinfo.get_visible_config():
+                print config
 
-print tableinfo.get_current_config()
+# Instantiate TableInfo
+tableinfo = TableInfo(configId=int(sys.argv[1]))
+#tableinfo = TableInfo()

@@ -92,4 +92,3 @@ class MainWindow(wx.Frame):
 app = wx.App(False)
 frame = MainWindow(None, "Table 2D simulator - clutter table manipulation")
 app.MainLoop()
-
