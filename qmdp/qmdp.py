@@ -7,7 +7,7 @@ from state_rep import *
 
 class MDP():
     def __init__(self, t_world, g_cost = -1., goal_rew = 10., exit_cost = -5, disc=1.):
-        self.world = t_world
+        self.world = copy.copy(t_world)
         self.grasp_cost = g_cost
         self.goal_reward = goal_rew
         self.exit_cost = exit_cost
@@ -89,8 +89,9 @@ class MDP():
                 V_list.append(self.value_iteration(-1))
 
         if len(successor_actions) != 0:
+            # print "succ acts", successor_actions
+            act_q_mdp_list = []
             for act_ind in successor_actions:
-                act_q_mdp_list = []
                 q_mdp = 0.
                 for s in range(N+1):
                     prev_V = self.compute_prev_v(s, act_ind, V_list[s])
@@ -99,6 +100,7 @@ class MDP():
 
                     q_mdp += b[s] * Q
                 act_q_mdp_list.append(q_mdp)
+            # print "actqmdplist",  act_q_mdp_list
             ret_act = successor_actions[np.argmax(act_q_mdp_list)]
             return ret_act, zip(*[successor_actions, act_q_mdp_list])
         else:
@@ -200,7 +202,7 @@ class MDP():
                     reward = self.exit_cost
                 outer += (reward - alpha * inner) * b_i
             act_values.append(outer)
-        print "act_vals", act_values
+        # print "act_vals", act_values
         return tbl_st.from_actions[np.argmax(act_values)].action_id, act_values
 
     def call_planning(self, belief, planner_type, state_index=0):
@@ -209,12 +211,12 @@ class MDP():
             act_id, act_vals = self.q_mdp_policy(state_index, belief)
             act = self.world.table_actions[act_id]
             obj_id = self.world.table_states.table_objects[act.obj_rem].obj_id
-            return [ act.state_final_list[0][0], obj_id ]
+            return obj_id
         elif planner_type == EXPECTEDINFO:
             act_id, act_vals = self.expected_info_gain(state_index, belief)
             act = self.world.table_actions[act_id]
             obj_id = self.world.table_states.table_objects[act.obj_rem].obj_id
-            return [ act.state_final_list[0][0], obj_id ]
+            return obj_id
         else:
             raise Exception("Bad planner_type")
             return None
@@ -236,6 +238,7 @@ def simulation_no_find(mdp, b_init, method):
         act_id, vals = method(cur_ind, b)
         act = mdp.world.table_actions[act_id]
         print "Action %d taken.  <%s>" % (act_id, act)
+        print vals
         # we will always succeed
         prob = act.state_final_list[0][0]
         print "\tProbability of success: %1.2f" % (prob)
@@ -247,6 +250,7 @@ def simulation_no_find(mdp, b_init, method):
             break
         last_b = b.copy()
         b = mdp.bayes_filter(b, act_id, -1) # no goal object seen
+        print "b", b
         print "\tNew belief:", "[", ", ".join(["%1.2f" % (np.log(b_i)) for b_i in b]), "]"
         print "\tEntropy Difference: %1.4f" % (entropy_difference(last_b, b))
 
