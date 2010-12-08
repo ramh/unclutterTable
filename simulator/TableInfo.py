@@ -36,7 +36,7 @@ class TableInfo:
 #            self.colors.append(colorlist[random.randint(0, len(colorlist)-1)])
 
     def manualConf(self, configId):
-        self.latticeids = []
+        self.goalid = 1
         if configId == 1: # Some random config to test views
             self.numobjects = 3
             self.ids = range(0, self.numobjects)
@@ -50,6 +50,7 @@ class TableInfo:
             self.
             self.latticeids = range(1, self.numobjects+1)
         elif configId == 2: # Simple Vertical Stacking
+            self.goalid = 0
             self.numobjects = 5
             self.ids = range(0, self.numobjects)
             self.positions  = [ [120, 20, 0], [115, 30, 20], [110, 10, 30], [190, 30, 0], [180, 10, 10] ]
@@ -61,6 +62,7 @@ class TableInfo:
             self.f_grasps = [ 0.9, 0.8, 0.7, 0.9, 0.8]
             self.latticeids = range(1, self.numobjects+1)
         elif configId == 3: # Simple Horizontal Stacking
+            self.goalid = 4
             self.numobjects = 5
             self.ids = range(0, self.numobjects)
             self.positions  = [ [120, 80, 0], [115, 50, 0], [110, 10, 0], [190, 50, 0], [180, 10, 0] ]
@@ -71,11 +73,26 @@ class TableInfo:
             self.c_grasps = [ 0.9, 0.9, 0.7, 0.9, 0.7]
             self.f_grasps = [  0.9, 0.9, 0.7, 0.9, 0.7]
             self.latticeids = range(1, self.numobjects+1)
+        elif configId == 4: # Complex Vertical Stacking
+            self.goalid = 1
+            self.numobjects = 8
+            self.ids = range(0, self.numobjects)
+            self.positions  = [ [120, 20, 0], [150, 20, 0], [110, 20, 20], [130, 20, 40], [110, 30, 70], [140, 20, 90],  # Stack 1
+                                [200, 30, 0], [220, 40, 0] ]
+            self.dimensions = [ [20, 20, 20], [20, 20, 20], [70, 20, 20], [40, 30, 30], [70, 20, 20], [20, 20, 20],  # Stack 2
+                                [20, 20, 20], [20, 20, 30] ]
+            self.colors = ["yellow", "blue", "green", "yellow", "gray", "black",
+                           "black", "blue" ]
+            self.full_occ_list = [ [], [], [], [], [], [], [], [] ]
+            self.part_occ_list = [ [], [], [], [], [], [], [], [] ]
+            self.c_grasps = [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
+            self.f_grasps = [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
+            self.latticeids = range(1, self.numobjects+1)
 
     def get_current_belief(self):
         
 
-    def get_visible_config(self):
+    def get_visible_objects(self):
         tbl_objs = []
         tbl_inds = []
         for i in range(self.numobjects):
@@ -94,8 +111,9 @@ class TableInfo:
         return tbl_objs
 
     def sortonY(self):
-        for i in range(0, len(self.positions)-1):
-            for j in range(i+1, len(self.positions)):
+        print "Sorting on Y"
+        for i in range(0, self.numobjects-1):
+            for j in range(i+1, self.numobjects):
                 if(self.positions[i][1] < self.positions[j][1]):
                     tmp = self.positions[i]; self.positions[i] = self.positions[j]; self.positions[j] = tmp
                     tmp = self.dimensions[i]; self.dimensions[i] = self.dimensions[j]; self.dimensions[j] = tmp
@@ -108,8 +126,9 @@ class TableInfo:
                     tmp = self.latticeids[i]; self.latticeids[i] = self.latticeids[j]; self.latticeids[j] = tmp
 
     def sortonZ(self):
-        for i in range(0, len(self.positions)-1):
-            for j in range(i+1, len(self.positions)):
+        print "Sorting on Z"
+        for i in range(0, self.numobjects-1):
+            for j in range(i+1, self.numobjects):
                 if(self.positions[i][2] > self.positions[j][2]):
                     tmp = self.positions[i]; self.positions[i] = self.positions[j]; self.positions[j] = tmp
                     tmp = self.dimensions[i]; self.dimensions[i] = self.dimensions[j]; self.dimensions[j] = tmp
@@ -129,11 +148,12 @@ class TableInfo:
         print "Colors: %s" % self.colors
 
     def printVisibleConf(self):
-        if len(tableinfo.get_visible_config()) == 0:
+        visible_objects = self.get_visible_objects()
+        if len(visible_objects) == 0:
             print "No Objects present"
         else:
             print "Objects are:"
-            for config in tableinfo.get_visible_config():
+            for config in visible_objects:
                 print config
 
 # Instantiate TableInfo

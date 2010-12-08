@@ -5,11 +5,13 @@ from TableFrontPanel import *
 from TableTopPanel import *
 from DetailsPanel import *
 from Manipulator import *
+from qmdp.state_rep import *
+from qmdp.qmdp import *
 
 class MainWindow(wx.Frame):
     def __init__(self, parent, title):
         self.dirname=''
-        wx.Frame.__init__(self, parent, title=title, size=(800,600))
+        wx.Frame.__init__(self, parent, title=title, size=(900,700))
         self.control = wx.TextCtrl(self, style=wx.TE_MULTILINE)
         self.CreateStatusBar() # A Statusbar in the bottom of the window
 
@@ -51,16 +53,34 @@ class MainWindow(wx.Frame):
         DetailsPanel(self, 3, pos=(0, 0))
 
     def drawToolBox(self):
+        # Tools for POMDP
         self.buttons = []
-        self.toolbox = wx.BoxSizer(wx.HORIZONTAL)
+        self.toolbox1 = wx.BoxSizer(wx.HORIZONTAL)
+        label = wx.StaticText(self, -1, "POMDP Solve: Remove => ")
+        self.toolbox1.Add(label)
         for i in range(0, tableinfo.numobjects):
-            buttonRemove = wx.Button(self, i, "Remove Object %d(%s)" % (i , tableinfo.colors[i]))
+            buttonRemove = wx.Button(self, i, "Obj %d(%s)" % (i , tableinfo.colors[i]))
             self.Bind(wx.EVT_BUTTON, self.OnRemove, buttonRemove)
             self.buttons.append(buttonRemove)
-            self.toolbox.Add(buttonRemove, 1, wx.EXPAND)
-        self.sizer.Add(self.toolbox, 0, wx.EXPAND)
+            self.toolbox1.Add(buttonRemove, 1, wx.EXPAND)
+        # Tools for QMDP & InfoGain
+        self.toolbox2 = wx.BoxSizer(wx.HORIZONTAL)
+        label1 = wx.StaticText(self, -1, "QMDP Solve: ")
+        self.toolbox2.Add(label1)
+        buttonQMDP = wx.Button(self, -1, "Execute QMDP Step")
+        self.Bind(wx.EVT_BUTTON, self.OnExecQMDP, buttonQMDP)
+        self.toolbox2.Add(buttonQMDP, 1, wx.EXPAND)
 
-    # All Event Handling here
+        label2 = wx.StaticText(self, -1, "Information Gain Solve: ")
+        self.toolbox2.Add(label2)
+        buttonInfoGain = wx.Button(self, -1, "Execute InfoGain Step")
+        self.Bind(wx.EVT_BUTTON, self.OnExecInfoGain, buttonInfoGain)
+        self.toolbox2.Add(buttonInfoGain, 2, wx.EXPAND)
+        # Add the tools
+        self.sizer.Add(self.toolbox1, 0, wx.EXPAND)
+        self.sizer.Add(self.toolbox2, 0, wx.EXPAND)
+
+    # All Event Handling from here
     def OnAbout(self,e):
         # Create a message dialog box
         credits = "\n\n\n\tRam Kumar Hariharan\n\tKaushik Subramanian\n\tKelsey Hawkins\n"
@@ -82,9 +102,48 @@ class MainWindow(wx.Frame):
             f.close()
         dlg.Destroy()
 
+    def OnExecQMDP(self, e):
+        #TODO: calculate belief
+        visible_objects = tableinfo.get_visible_objects()
+        planner_type = 0 #QMDP
+        objId = execute_planning_step(belief, visible_objects, planner_type)
+
+        # somehow got objId and probability
+        latticeInd = 1
+        title = "Result QMDP (doesnt work yet)"
+        if latticeInd==0:
+            content = "I am no longer going to search for the object"
+        elif latticeInd<0:
+            content = "Goal Object found: %d" % (-latticeInd)
+        else:
+            # Chance of successful removal of object = Full Graspability probability
+            index = tableinfo.latticeids.index(latticeInd)
+            prob = tableinfo.f_grasps[index]
+            rand = random.random()
+            if rand < prob:
+                content = "Removed Object: %d" % (latticeInd)
+                self.removeObject(latticeInd)
+            else:
+                content = "Failed to remove Object: %d since grasp prob is: %d" % (latticeInd, prob*100)
+        msg_box = wx.MessageDialog(self, content, title, wx.OK | wx.CENTRE | wx.ICON_EXCLAMATION)
+        msg_box.ShowModal()   #Show the Dialog
+
+    def OnExecInfoGain(self, e):
+        title = "Result InfoGain"
+        content = "(doesnt work yet)"
+        msg_box = wx.MessageDialog(self, content, title, wx.OK | wx.CENTRE | wx.ICON_EXCLAMATION)
+        msg_box.ShowModal()   #Show the Dialog
+
     def OnRemove(self, e):
         objId = e.GetEventObject().GetId()
         index = tableinfo.ids.index(objId)
+        Manipulator.removeObject(index)
+        self.buttons[objId].Hide()
+        self.drawTable()
+
+    def removeObject(self, latticeInd):
+        index = tableinfo.latticeids.index(latticeInd)
+        objId = tableinfo.ids[index]
         Manipulator.removeObject(index)
         self.buttons[objId].Hide()
         self.drawTable()
