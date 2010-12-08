@@ -224,6 +224,10 @@ class MDP():
 QMDP = 0
 EXPECTEDINFO = 1
 
+def execute_planning_step(belief, visible_objs, planner_type):
+    mdp = MDP(table_world_generator(visible_objs))
+    return mdp.call_planning(belief, planner_type)
+
 def simulation_no_find(mdp, b_init, method):
     import random
     cur_ind = 0
