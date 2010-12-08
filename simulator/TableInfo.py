@@ -60,6 +60,9 @@ class TableInfo:
             self.part_occ_list = [ [1, 2], [2], [], [4], [] ]
             self.c_grasps = [ 0.9, 0.8, 0.7, 0.9, 0.8]
             self.f_grasps = [ 0.9, 0.8, 0.7, 0.9, 0.8]
+            self.open_b = [ ]
+            self.part_b = [ ]
+            # self.focc_b = [ ]
             self.latticeids = range(1, self.numobjects+1)
         elif configId == 3: # Simple Horizontal Stacking
             self.goalid = 4
@@ -72,6 +75,9 @@ class TableInfo:
             self.part_occ_list = [ [], [], [], [], [] ]
             self.c_grasps = [ 0.9, 0.9, 0.7, 0.9, 0.7]
             self.f_grasps = [  0.9, 0.9, 0.7, 0.9, 0.7]
+            self.open_b = [ ]
+            self.part_b = [ ]
+            # self.focc_b = [ ]
             self.latticeids = range(1, self.numobjects+1)
         elif configId == 4: # Complex Vertical Stacking
             self.goalid = 1
@@ -87,10 +93,53 @@ class TableInfo:
             self.part_occ_list = [ [], [], [], [], [], [], [], [] ]
             self.c_grasps = [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
             self.f_grasps = [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
+            self.open_b = [ ]
+            self.part_b = [ ]
+            # self.focc_b = [ ]
             self.latticeids = range(1, self.numobjects+1)
+            
+    def get_goal_vol(self):
+        goal_ind = self.ids.index(self.goalid)
+        dims = self.dimensions[goal_ind]
+        return dims[0] * dims[1] * dims[2]
 
-    def get_current_belief(self):
-        
+    def get_occ_vol(self, ind):
+        dims = self.dimensions[ind]
+        pos = self.positions[ind]
+        return dims[0] * dims[1] * (dims[2] + pos[2])
+
+    def get_full_occ_bel(self, ind):
+        CLUTTER_CONST = 0.5
+        occ_vol = self.get_occ_vol(ind)
+        return CLUTTER_CONST * occ_vol * (1. - self.get_goal_vol() / occ_vol)
+
+    def joint_belief(self, obj_bel):
+        ret_b = np.ones(len(b))
+        for i, b_i in enumerate(b):
+                for j, b_j in enumerate(b):
+                        if i == j:
+                                continue
+                        ret_b[i] *= 1. - b_j
+        ret_b *= b
+        # for not on table
+        np.append(ret_b, np.multiply.reduce(1. - ret_b))
+        return ret_b / np.linalg.norm(ret_b, 1)
+
+    def get_current_belief(self, vis_objs):
+        obj_bel = np.array(len(vis_objs) * 2)
+        for i, obj in enumerate(vis_objs):
+            ind = self.latticeids.index(obj.obj_id)
+            if len(obj.obstructors) == 0:
+                # do fully open
+                cur_bel = self.open_b[ind]
+            else:
+                # do partial
+                cur_bel = self.part_b[ind]
+            obj_bel[i] = cur_bel
+            # do full occ
+            full_occ_bel = self.get_full_occ_bel(ind)
+            obj_bel[i * 2] = full_occ_bel
+        return self.joint_belief(obj_bel)
 
     def get_visible_objects(self):
         tbl_objs = []
@@ -124,6 +173,9 @@ class TableInfo:
                     tmp = self.c_grasps[i]; self.c_grasps[i] = self.c_grasps[j]; self.c_grasps[j] = tmp
                     tmp = self.f_grasps[i]; self.f_grasps[i] = self.f_grasps[j]; self.f_grasps[j] = tmp
                     tmp = self.latticeids[i]; self.latticeids[i] = self.latticeids[j]; self.latticeids[j] = tmp
+                    tmp = self.open_b[i]; self.open_b[i] = self.open_b[j]; self.open_b[j] = tmp
+                    tmp = self.part_b[i]; self.part_b[i] = self.part_b[j]; self.part_b[j] = tmp
+                    # tmp = self.focc_b[i]; self.focc_b[i] = self.focc_b[j]; self.focc_b[j] = tmp
 
     def sortonZ(self):
         print "Sorting on Z"
@@ -139,6 +191,9 @@ class TableInfo:
                     tmp = self.c_grasps[i]; self.c_grasps[i] = self.c_grasps[j]; self.c_grasps[j] = tmp
                     tmp = self.f_grasps[i]; self.f_grasps[i] = self.f_grasps[j]; self.f_grasps[j] = tmp
                     tmp = self.latticeids[i]; self.latticeids[i] = self.latticeids[j]; self.latticeids[j] = tmp
+                    tmp = self.open_b[i]; self.open_b[i] = self.open_b[j]; self.open_b[j] = tmp
+                    tmp = self.part_b[i]; self.part_b[i] = self.part_b[j]; self.part_b[j] = tmp
+                    # tmp = self.focc_b[i]; self.focc_b[i] = self.focc_b[j]; self.focc_b[j] = tmp
 
     def printConf(self):
         print "Numobjects : %s" % self.numobjects

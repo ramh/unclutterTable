@@ -26,6 +26,8 @@ print "-" * 20, " V ", "-" * 20
 mdp.print_V(V, goal_ind)
 b = normalize(np.ones(2 * len(vis_objs)+1))
 print "b", b
+b[0] = 2.9
+mdp.call_planning(b, 1)
 simulation_no_find(mdp, b, mdp.q_mdp_policy)
 simulation_no_find(mdp, b, mdp.expected_info_gain)
 

@@ -169,7 +169,7 @@ class MDP():
         temp2 = [0. if np.isnan(t) else t for t in temp]
         return -sum(temp2)
 
-    def expected_info_gain(self, ind, b, alpha = 0.01, grasp_prob = 0.7):
+    def expected_info_gain(self, ind, b, alpha = 0.03, grasp_prob = 0.7):
         tbl_st = self.world.table_states[ind]
 
         act_values = []
@@ -203,23 +203,36 @@ class MDP():
                 outer += (reward - alpha * inner) * b_i
             act_values.append(outer)
         # print "act_vals", act_values
-        return tbl_st.from_actions[np.argmax(act_values)].action_id, act_values
+        successor_actions = self.succ_acts(ind)
+        return tbl_st.from_actions[np.argmax(act_values)].action_id, zip(*[successor_actions, act_values])
 
     def call_planning(self, belief, planner_type, state_index=0):
-        belief = normalize(belief)
+        if not np.allclose(np.linalg.norm(belief, 1), 1.):
+            print "Belief not normalized, normalizing"
+            belief = normalize(belief)
+
         if planner_type == QMDP:
             act_id, act_vals = self.q_mdp_policy(state_index, belief)
             act = self.world.table_actions[act_id]
-            obj_id = self.world.table_states.table_objects[act.obj_rem].obj_id
-            return obj_id
         elif planner_type == EXPECTEDINFO:
             act_id, act_vals = self.expected_info_gain(state_index, belief)
-            act = self.world.table_actions[act_id]
-            obj_id = self.world.table_states.table_objects[act.obj_rem].obj_id
-            return obj_id
         else:
             raise Exception("Bad planner_type")
             return None
+
+        print "Action Values", "[ " + "\n\t\t".join((self.world.table_actions[act_val[0]].__str__() + " : " + str(act_val[1])) for act_val in act_vals) + " ]"
+        print "Action Taken:", self.world.table_actions[act_id].__str__()
+        act = self.world.table_actions[act_id]
+        if act.act_type == GRASP_REMOVE:
+            obj_id = act.state_init.table_objects[act.obj_rem].obj_id
+            return obj_id
+        elif act.act_type == GRASP_GOAL:
+            obj_id = act.state_init.table_objects[act.obj_rem].obj_id
+            return -obj_id
+        elif act.act_type == EXIT_NO_GOAL:
+            return 0
+        else:
+            raise Exception("Bad action type")
         
 QMDP = 0
 EXPECTEDINFO = 1
