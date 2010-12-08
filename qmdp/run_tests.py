@@ -16,16 +16,18 @@ vis_objs = [t1, t2, t3, t4, t5]
 
 table_world = table_world_generator(vis_objs)
 
-print table_world.__str__()
+# print table_world.__str__()
 
-goal_ind = 20
+goal_ind = 6
+print table_world.table_states[1]
 mdp = MDP(table_world)
-V = mdp.value_iteration(goal_ind, 1)
+V = mdp.value_iteration(goal_ind, 0.001)
+print "-" * 20, " V ", "-" * 20
 mdp.print_V(V, goal_ind)
 b = normalize(np.ones(2 * len(vis_objs)+1))
 print "b", b
-simulation_no_find(mdp, b, mdp.q_mdp_policy)
 simulation_no_find(mdp, b, mdp.expected_info_gain)
+simulation_no_find(mdp, b, mdp.q_mdp_policy)
 
 # Q = mdp.q_mdp(b)
 # mdp.print_Q(Q, b)

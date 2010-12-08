@@ -21,27 +21,43 @@ class TableObject():
                 "Is Potential: " + str(self.is_potential) + "\n\t" +
                 "Obstructors: " + ", ".join([str(obs.obj_id) for obs in self.obstructors]) + "\n")
 
+GRASP_REMOVE = 0
+GRASP_GOAL = 1
+EXIT_NO_GOAL = 2
 
 class TableAction():
-    def __init__(self, obj_rem, si, sf_list):
+    def __init__(self, obj_rem, si, sf_list, act_type=GRASP_REMOVE):
         self.obj_rem = obj_rem
         self.state_init = si
         self.state_final_list = sf_list
-        self.reward = -1.0
+        self.act_type = act_type
     def __str__(self):
-        return ("Object removed: %d " % (self.obj_rem) + "Init state: " + str(self.state_init.state_id) + " " +
+        if self.act_type == GRASP_REMOVE:
+            return ("Object removed: %d " % (self.obj_rem) + "Init state: " + str(self.state_init.state_id) + " " +
+                "Final states: "+ ", ".join([ "[%1.2f %s]" % (pa[0], pa[1].state_id) for pa in self.state_final_list]))
+        if self.act_type == GRASP_GOAL:
+            return ("Goal returned: %d " % (self.obj_rem) + "Init state: " + str(self.state_init.state_id) + " " +
+                "Final states: "+ ", ".join([ "[%1.2f %s]" % (pa[0], pa[1].state_id) for pa in self.state_final_list]))
+        if self.act_type == EXIT_NO_GOAL:
+            return ("Search ended, no goal: %d " % (self.obj_rem) + "Init state: " + str(self.state_init.state_id) + " " +
                 "Final states: "+ ", ".join([ "[%1.2f %s]" % (pa[0], pa[1].state_id) for pa in self.state_final_list]))
 
 class TableState():
-    def __init__(self, ts_id, tbl_objs):
+    def __init__(self, ts_id, tbl_objs, is_exit=False, obj_ind_exit=-100):
         self.state_id = ts_id
-        self.table_objects = tbl_objs
-        self.objs_not_moved = set()
-        for obj in self.table_objects:
-            if not obj.has_moved:
-                self.objs_not_moved.add(obj.obj_id)
-            for obst in obj.obstructors:
-                obst.obstructing.append(obj)
+        self.is_exit = is_exit
+        if not is_exit:
+            self.table_objects = tbl_objs
+            self.objs_not_moved = set()
+            for obj in self.table_objects:
+                obj.obstructing = []
+            for obj in self.table_objects:
+                if not obj.has_moved:
+                    self.objs_not_moved.add(obj.obj_id)
+                for obst in obj.obstructors:
+                    obst.obstructing.append(obj)
+        else:
+            self.obj_ind_exit = obj_ind_exit
         self.from_actions = []
         self.to_actions = []
 
@@ -49,10 +65,15 @@ class TableState():
         return ts.objs_not_moved == self.objs_not_moved
 
     def __str__(self):
-        return ("State ID: " + str(self.state_id) + "\n"
-                "State objects:\n"+"\n".join([obj.__str__() for obj in self.table_objects]) +"\n"
-                "From actions:\n"+"\n\n".join([ act.__str__() for act in self.from_actions]) + "\n\n"
-                "To actions:\n"+"\n\n".join([ act.__str__() for act in self.to_actions]))
+        if not self.is_exit:
+            return ("State ID: " + str(self.state_id) + "\n"
+                    "\tState objects:\n"+"\n".join([obj.__str__() for obj in self.table_objects]) +"\n"
+                    "\tFrom actions:\n"+"\n\n".join([ act.__str__() for act in self.from_actions]) + "\n\n"
+                    "\tTo actions:\n"+"\n\n".join([ act.__str__() for act in self.to_actions]))
+        else:
+            return ("State ID: " + str(self.state_id) + "\n"
+                    "\tTerminal state\n" +"\n"
+                    "\tReturned index: %d\n\n" % (self.obj_ind_exit))
 
 class TableWorld():
     def __init__(self, num_objs, tbl_sts, tbl_acts):
@@ -64,8 +85,10 @@ class TableWorld():
         for i, act in enumerate(self.table_actions):
             act.action_id = i
 
+    def is_terminal_action(self, act_id):
+        return self.table_actions[act_id].act_type != GRASP_REMOVE
+
     def __str__(self):
-        print self.table_actions
         return ("-" * 20 + " Table States " + "-" * 20 + "\n" + ("\n" + "-" * 60 + "\n").join([ts.__str__() for ts in self.table_states]) + 
                 "\n" + "-" * 20 + " Table Actions " + "-" * 20 + "\n" + "\n\n".join([ts.__str__() for ts in self.table_actions]))
         
@@ -114,6 +137,8 @@ def table_world_generator(vis_objs):
                         raise Exception("Bad obj structure")
 
                     new_tbl_objs[rem_i].has_moved = True
+                    new_tbl_objs[rem_i].obstructors = []
+                    new_tbl_objs[rem_i].obstructing = []
                     made_state = TableState(state_id, new_tbl_objs)
 
                     new_state = None
@@ -142,6 +167,34 @@ def table_world_generator(vis_objs):
     all_states = []
     for level in all_levels:
         all_states.extend(level)
+    end_states = []
+    for i, obj in enumerate(tbl_objs):
+        # add state
+        ret_goal_state = TableState(state_id, None, True, i)
+        end_states.append(ret_goal_state)
+        state_id += 1
+        # make actions
+        for st in all_states:
+            if len(st.table_objects[i].obstructors) == 0:
+                graspability = obj.unobs_grasp
+                sf_acts = [ [ graspability, ret_goal_state ], [ 1. - graspability, st ] ]
+                act = TableAction(i, st, sf_acts, GRASP_GOAL)
+                st.from_actions.append(act)
+                st.to_actions.append(act)
+                ret_goal_state.to_actions.append(act)
+                all_actions.append(act)
+
+    exit_goal_state = TableState(state_id, None, True, -1)
+    end_states.append(exit_goal_state)
+    for st in all_states:
+        sf_acts = [ [ 1., exit_goal_state ] ]
+        act = TableAction(-1, st, sf_acts, EXIT_NO_GOAL)
+        st.from_actions.append(act)
+        st.to_actions.append(act)
+        exit_goal_state.to_actions.append(act)
+        all_actions.append(act)
+                    
+    all_states.extend(end_states)
     return TableWorld(len(tbl_objs), all_states, all_actions)
 
 def normalize(b):
