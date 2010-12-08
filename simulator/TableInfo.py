@@ -47,6 +47,7 @@ class TableInfo:
             self.part_occ_list = [ [], [], [1] ]
             self.c_grasps = [0.7, 0.8, 0.2 ]
             self.f_grasps = [0.7, 0.8, 0.7 ]
+            self.
             self.latticeids = range(1, self.numobjects+1)
         elif configId == 2: # Simple Vertical Stacking
             self.numobjects = 5
@@ -70,6 +71,9 @@ class TableInfo:
             self.c_grasps = [ 0.9, 0.9, 0.7, 0.9, 0.7]
             self.f_grasps = [  0.9, 0.9, 0.7, 0.9, 0.7]
             self.latticeids = range(1, self.numobjects+1)
+
+    def get_current_belief(self):
+        
 
     def get_visible_config(self):
         tbl_objs = []
