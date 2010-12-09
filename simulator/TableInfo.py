@@ -14,8 +14,9 @@ class TableInfo:
             self.goalid = goalInd
         self.goal_vol = self.get_goal_vol()
         self.printConf()
+        self.init_rem_objs()
 
-     def init_rem_objs(self):
+    def init_rem_objs(self):
         self.rem_numobjects = 0
         self.rem_ids = []
         self.rem_positions  = []
@@ -27,6 +28,7 @@ class TableInfo:
         self.rem_f_grasps = []
         self.rem_open_b = []
         self.rem_part_b = []
+        self.rem_latticeids = []
         
 
 #TODO: Attempt to do Random Configuration is not that easy (commented for now)
@@ -207,7 +209,7 @@ class TableInfo:
     def joint_belief(self, obj_bel):
         ret_b = [1.] * (len(obj_bel) + 1)
         tbl_b = 1.
-        print "obj_bel", obj_bel
+        # print "obj_bel", obj_bel
         for i, b_i in enumerate(obj_bel):
                 ret_b[i] *= b_i
                 for j, b_j in enumerate(obj_bel):
@@ -216,11 +218,11 @@ class TableInfo:
                         ret_b[i] *= 1. - b_j
                 tbl_b *= 1. - b_i
         # for not on table
-        print "ret_b bef", ret_b
-        print "tbl_bel", tbl_b
+        # print "ret_b bef", ret_b
+        # print "tbl_bel", tbl_b
         #ret_b = np.array(ret_b.tolist + [tbl_bel])
         ret_b[-1] = tbl_b
-        print "ret_b aft", ret_b
+        # print "ret_b aft", ret_b
         sum_arr = 0.
         for i, b_i in enumerate(ret_b):
             sum_arr += b_i
@@ -234,7 +236,6 @@ class TableInfo:
         #self.printConf()
         obj_bel = [0.] * (len(vis_objs) * 2)
         for i, obj in enumerate(vis_objs):
-            print "Obj_bel : ", obj_bel
             ind = self.latticeids.index(obj.obj_id)
             if len(obj.obstructors) == 0:
                 # do fully open
@@ -243,18 +244,25 @@ class TableInfo:
                 # do partial
                 cur_bel = self.part_b[ind]
             obj_bel[i] = cur_bel
-            print "Current Belief : ", cur_bel, " Obj_bel[i] : ", obj_bel[i]
-            # do full occ
-            full_occ_bel = self.get_full_occ_bel(ind)
+            # print "Current Belief : ", cur_bel, " Obj_bel[i] : ", obj_bel[i]
+            if not obj.has_moved:
+                # do full occ
+                full_occ_bel = self.get_full_occ_bel(ind)
+            else:
+                # We placed the object in an open location with nothing behind it
+                full_occ_bel = 0.
             obj_bel[i + len(vis_objs)] = full_occ_bel
 
-        return self.joint_belief(obj_bel)
+        print "Object recog probs:\n", "\n\t".join(["%2d %1.3f" % (i, o_i) for i, o_i in enumerate(obj_bel)])
+        joint_bel = self.joint_belief(obj_bel)
+        print "Joint belief:\n", "\n\t".join(["%2d %1.3f" % (i, o_i) for i, o_i in enumerate(joint_bel)])
+        return joint_bel
 
     def get_visible_objects(self):
         tbl_objs = []
         tbl_inds = []
         for i in range(self.numobjects):
-            print "get_vis", i, self.full_occ_list[i]
+            # print "get_vis", i, self.full_occ_list[i]
             if len(self.full_occ_list[i]) != 0:
                 continue
             new_tbl_obj = TableObject(self.latticeids[i], self.part_occ_list[i], False, False, self.c_grasps[i], self.f_grasps[i])
@@ -266,6 +274,14 @@ class TableInfo:
             for o_obst in n_obj.obstructors:
                 n_obsts.append(tbl_objs[tbl_inds.index(self.latticeids.index(o_obst))])
             n_obj.obstructors = n_obsts
+        tbl_objs.extend(self.get_moved_objects())
+        return tbl_objs
+
+    def get_moved_objects(self):
+        tbl_objs = []
+        for i in range(self.rem_numobjects):
+            new_tbl_obj = TableObject(self.rem_latticeids[i], [], False, True, self.rem_c_grasps[i], self.rem_f_grasps[i])
+            tbl_objs.append(new_tbl_obj)
         return tbl_objs
 
     def sortonY(self):
@@ -308,8 +324,8 @@ class TableInfo:
         objId = self.ids.pop(index)
         self.rem_ids.append(objId)
         self.rem_positions.append(self.positions.pop(index))
-        self.rem_dimension.append(sself.dimensions.pop(index))
-        self.rem_color.append(sself.colors.pop(index))
+        self.rem_dimensions.append(self.dimensions.pop(index))
+        self.rem_colors.append(self.colors.pop(index))
         self.rem_full_occ_list.append(self.full_occ_list.pop(index))
         self.rem_part_occ_list.append(self.part_occ_list.pop(index))
         self.rem_latticeids.append(self.latticeids.pop(index))
