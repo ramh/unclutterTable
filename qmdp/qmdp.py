@@ -6,7 +6,7 @@ import copy
 from state_rep import *
 
 class MDP():
-    def __init__(self, t_world, g_cost = -1., goal_rew = 10., exit_cost = -5, disc=1.):
+    def __init__(self, t_world, g_cost = -1., goal_rew = 5., exit_cost = -1., disc=1.):
         self.world = copy.copy(t_world)
         self.grasp_cost = g_cost
         self.goal_reward = goal_rew
@@ -49,7 +49,7 @@ class MDP():
                             if goal_ind == self.world.table_states[i].obj_ind_exit:
                                 V[i] = self.goal_reward
                             else:
-                                V[i] = -1000000.
+                                V[i] = self.exit_cost
                     else:
                         raise Exception("Terminal non-exit node?")
 

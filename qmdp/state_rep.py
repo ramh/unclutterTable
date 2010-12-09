@@ -33,13 +33,13 @@ class TableAction():
         self.act_type = act_type
     def __str__(self):
         if self.act_type == GRASP_REMOVE:
-            return ("Object removed: %d " % (self.obj_rem) + "Init state: " + str(self.state_init.state_id) + " " +
+            return ("Object removed: %d " % (self.state_init.table_objects[self.obj_rem].obj_id-1) + "Init state: " + str(self.state_init.state_id) + " " +
                 "Final states: "+ ", ".join([ "[%1.2f %s]" % (pa[0], pa[1].state_id) for pa in self.state_final_list]))
         if self.act_type == GRASP_GOAL:
-            return ("Goal returned: %d " % (self.obj_rem) + "Init state: " + str(self.state_init.state_id) + " " +
+            return ("Goal returned: %d " % (self.state_init.table_objects[self.obj_rem].obj_id-1) + "Init state: " + str(self.state_init.state_id) + " " +
                 "Final states: "+ ", ".join([ "[%1.2f %s]" % (pa[0], pa[1].state_id) for pa in self.state_final_list]))
         if self.act_type == EXIT_NO_GOAL:
-            return ("Search ended, no goal: %d " % (self.obj_rem) + "Init state: " + str(self.state_init.state_id) + " " +
+            return ("Search ended, no goal: %d " % (self.state_init.table_objects[self.obj_rem].obj_id-1) + "Init state: " + str(self.state_init.state_id) + " " +
                 "Final states: "+ ", ".join([ "[%1.2f %s]" % (pa[0], pa[1].state_id) for pa in self.state_final_list]))
 
 class TableState():
@@ -167,6 +167,8 @@ def table_world_generator(vis_objs):
     all_states = []
     for level in all_levels:
         all_states.extend(level)
+    
+    # make terminal nodes
     end_states = []
     for i, obj in enumerate(tbl_objs):
         # add state

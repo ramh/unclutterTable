@@ -107,6 +107,7 @@ class MainWindow(wx.Frame):
         belief = tableinfo.get_current_belief(visible_objects)
         planner_type = 0 #QMDP
         print "EXECUTE PLANNING Input: ", belief, visible_objects, planner_type
+        print ", ".join([vis_obj.__str__() for vis_obj in visible_objects])
         latticeInd = execute_planning_step(belief, visible_objects, planner_type)
         print "EXECUTE PLANNING Output: ", latticeInd
 
@@ -115,17 +116,19 @@ class MainWindow(wx.Frame):
         if latticeInd==0:
             content = "I am no longer going to search for the object"
         elif latticeInd<0:
-            content = "Goal Object found: %d" % (-latticeInd)
+            index = tableinfo.latticeids.index(-latticeInd)
+            content = "Goal Object found: %d" % (tableinfo.ids[index])
         else:
             # Chance of successful removal of object = Full Graspability probability
             index = tableinfo.latticeids.index(latticeInd)
+            objId = tableinfo.ids[index]
             prob = tableinfo.f_grasps[index]
             rand = random.random()
             if rand < prob:
-                content = "Removed Object: %d" % (index)
+                content = "Removed Object: %d" % (objId)
                 self.removeObject(index)
             else:
-                content = "Failed to remove Object: %d since grasp prob is: %d" % (latticeInd, prob*100)
+                content = "Failed to remove Object: %d since grasp prob is: %d" % (objId, prob*100)
         msg_box = wx.MessageDialog(self, content, title, wx.OK | wx.CENTRE | wx.ICON_EXCLAMATION)
         msg_box.ShowModal()   #Show the Dialog
 

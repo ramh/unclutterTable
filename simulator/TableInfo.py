@@ -2,6 +2,7 @@
 import random
 import sys
 from qmdp.state_rep import TableObject
+from utils import half_gauss, part_gauss
 import numpy as np
 
 class TableInfo:
@@ -65,7 +66,7 @@ class TableInfo:
             self.positions  = [ [120, 20, 0], [115, 30, 20], [110, 10, 30], [190, 30, 0], [180, 10, 10] ]
             self.dimensions = [ [20, 20, 20], [30, 10, 10], [40, 40, 40], [30, 10, 10], [40, 40, 40] ]
             self.colors = ["yellow", "blue", "green", "yellow", "blue"]
-            self.full_occ_list = [ [1, 2], [2], [], [4], [] ]
+            self.full_occ_list = [ [2], [2], [], [4], [] ]
             self.part_occ_list = [ [1, 2], [2], [], [4], [] ]
             self.c_grasps = [ 0.9, 0.8, 0.7, 0.9, 0.8]
             self.f_grasps = [ 0.9, 0.8, 0.7, 0.9, 0.8]
@@ -169,6 +170,9 @@ class TableInfo:
             self.part_b = [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
             self.latticeids = range(1, self.numobjects+1)
 
+    def set_vision(self, open_b, part_b):
+        self.open_b = copy.copy(open_b)
+        self.part_b = copy.copy(part_b)
 
     def get_goal_vol(self):
         goal_ind = self.ids.index(self.goalid)
@@ -215,6 +219,7 @@ class TableInfo:
         #self.printConf()
         obj_bel = [0.] * (len(vis_objs) * 2)
         for i, obj in enumerate(vis_objs):
+            print "Obj_bel : ", obj_bel
             ind = self.latticeids.index(obj.obj_id)
             if len(obj.obstructors) == 0:
                 # do fully open
@@ -224,7 +229,6 @@ class TableInfo:
                 cur_bel = self.part_b[ind]
             obj_bel[i] = cur_bel
             print "Current Belief : ", cur_bel, " Obj_bel[i] : ", obj_bel[i]
-            print "Obj_bel : ", obj_bel
             # do full occ
             full_occ_bel = self.get_full_occ_bel(ind)
             obj_bel[i + len(vis_objs)] = full_occ_bel
@@ -235,6 +239,7 @@ class TableInfo:
         tbl_objs = []
         tbl_inds = []
         for i in range(self.numobjects):
+            print "get_vis", i, self.full_occ_list[i]
             if len(self.full_occ_list[i]) != 0:
                 continue
             new_tbl_obj = TableObject(self.latticeids[i], self.part_occ_list[i], False, False, self.c_grasps[i], self.f_grasps[i])
