@@ -115,8 +115,15 @@ class MainWindow(wx.Frame):
         if latticeInd==0:
             content = "I am no longer going to search for the object"
         elif latticeInd<0:
-            index = tableinfo.latticeids.index(-latticeInd)
-            content = "Goal Object found: %d" % (tableinfo.ids[index])
+            if -latticeInd in tableinfo.latticeids:
+                index = tableinfo.latticeids.index(-latticeInd)
+                content = "Goal Object found: %d" % (tableinfo.ids[index])
+            elif -latticeInd in tableinfo.rem_latticeids:
+                index = tableinfo.rem_latticeids.index(-latticeInd)
+                content = "Goal Object found: %d" % (tableinfo.rem_ids[index])
+            else:
+                raise Exception("Lost track of index")
+
         else:
             # Chance of successful removal of object = Full Graspability probability
             index = tableinfo.latticeids.index(latticeInd)

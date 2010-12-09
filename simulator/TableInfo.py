@@ -1,6 +1,7 @@
 """ Configuration of the table state from FRONT VIEW """
 import random
 import sys
+import copy
 from qmdp.state_rep import TableObject
 from utils import half_gauss, part_gauss
 import numpy as np
@@ -193,17 +194,20 @@ class TableInfo:
     def get_goal_vol(self):
         goal_ind = self.ids.index(self.goalid)
         dims = self.dimensions[goal_ind]
-        return dims[0] * dims[1] * dims[2]
+        return float(dims[0]) * dims[1] * dims[2]
 
     def get_occ_vol(self, ind):
         dims = self.dimensions[ind]
         pos = self.positions[ind]
-        return dims[0] * dims[1] * (dims[2] + pos[2])
+        return float(dims[0]) * dims[1] * (dims[2] + pos[2])
 
     def get_full_occ_bel(self, ind):
         CLUTTER_CONST = 1.0 / 180000.
+        BUFFER = 5000.
         occ_vol = self.get_occ_vol(ind)
-        return CLUTTER_CONST * occ_vol * max((1. - self.goal_vol / occ_vol), 0.)
+        print "occ_vol", ind, occ_vol
+        print "goal_vol", ind, self.goal_vol
+        return CLUTTER_CONST * occ_vol * max((1. - self.goal_vol / (occ_vol + BUFFER)), 0.)
 
     def joint_belief(self, obj_bel):
         ret_b = [1.] * (len(obj_bel) + 1)
@@ -235,13 +239,19 @@ class TableInfo:
         #self.printConf()
         obj_bel = [0.] * (len(vis_objs) * 2)
         for i, obj in enumerate(vis_objs):
-            ind = self.latticeids.index(obj.obj_id)
-            if len(obj.obstructors) == 0:
-                # do fully open
-                cur_bel = self.open_b[ind]
+            if not obj.has_moved:
+                ind = self.latticeids.index(obj.obj_id)
+                if len(obj.obstructors) == 0:
+                    # do fully open
+                    cur_bel = self.open_b[ind]
+                else:
+                    # do partial
+                    cur_bel = self.part_b[ind]
             else:
-                # do partial
-                cur_bel = self.part_b[ind]
+                ind = self.rem_latticeids.index(obj.obj_id)
+                # do fully open, its always open
+                cur_bel = self.rem_open_b[ind]
+
             obj_bel[i] = cur_bel
             # print "Current Belief : ", cur_bel, " Obj_bel[i] : ", obj_bel[i]
             if not obj.has_moved:
@@ -252,9 +262,9 @@ class TableInfo:
                 full_occ_bel = 0.
             obj_bel[i + len(vis_objs)] = full_occ_bel
 
-        print "Object recog probs:\n", "\n\t".join(["%2d %1.3f" % (i, o_i) for i, o_i in enumerate(obj_bel)])
+        print "Object recog probs:\n\t", "\n\t".join(["%2d %1.3f" % (i, o_i) for i, o_i in enumerate(obj_bel)])
         joint_bel = self.joint_belief(obj_bel)
-        print "Joint belief:\n", "\n\t".join(["%2d %1.3f" % (i, o_i) for i, o_i in enumerate(joint_bel)])
+        print "Joint belief:\n\t", "\n\t".join(["%2d %1.3f" % (i, o_i) for i, o_i in enumerate(joint_bel)])
         return joint_bel
 
     def get_visible_objects(self):
@@ -278,6 +288,11 @@ class TableInfo:
 
     def get_moved_objects(self):
         tbl_objs = []
+        print self.rem_numobjects
+        print self.rem_latticeids
+        print self.rem_c_grasps
+        print self.rem_f_grasps
+        print self.printConf()
         for i in range(self.rem_numobjects):
             new_tbl_obj = TableObject(self.rem_latticeids[i], [], False, True, self.rem_c_grasps[i], self.rem_f_grasps[i])
             tbl_objs.append(new_tbl_obj)
@@ -325,16 +340,15 @@ class TableInfo:
         x, y, z = self.positions.pop(index)
         x_offset = 50 * (self.rem_numobjects-1)
         self.rem_positions.append([10+x_offset, y+180, z])
-        print "Rem Pos : ", self.rem_positions
-        self.rem_dimensions.append(self.dimensions.pop(index))
+        self.rem_dimensions.append(copy.copy(self.dimensions.pop(index)))
         self.rem_colors.append(self.colors.pop(index))
-        self.rem_full_occ_list.append(self.full_occ_list.pop(index))
-        self.rem_part_occ_list.append(self.part_occ_list.pop(index))
+        self.rem_full_occ_list.append(copy.copy(self.full_occ_list.pop(index)))
+        self.rem_part_occ_list.append(copy.copy(self.part_occ_list.pop(index)))
         self.rem_latticeids.append(self.latticeids.pop(index))
         self.rem_c_grasps.append(self.c_grasps.pop(index))
-        self.rem_f_grasps.append(self.c_grasps.pop(index))
-        self.rem_open_b.append(self.c_grasps.pop(index))
-        self.rem_part_b.append(self.c_grasps.pop(index))
+        self.rem_f_grasps.append(self.f_grasps.pop(index))
+        self.rem_open_b.append(self.open_b.pop(index))
+        self.rem_part_b.append(self.part_b.pop(index))
 
         for pol in self.part_occ_list:
             if pol.count(objId) > 0:
