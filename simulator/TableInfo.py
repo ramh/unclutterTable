@@ -5,9 +5,12 @@ from qmdp.state_rep import TableObject
 import numpy as np
 
 class TableInfo:
-    def __init__(self, configId=0):
+    def __init__(self, configId=0, goalInd=-1): # goalInd=-1 to not overwrite the goal index
         self.configId = configId
         self.manualConf(configId)
+        # Overwrite the default goal index with what's passed
+        if goalInd!= -1:
+            self.goalid = goalInd
         self.printConf()
 
 #TODO: Attempt to do Random Configuration is not that easy (commented for now)
@@ -37,6 +40,8 @@ class TableInfo:
 #            self.colors.append(colorlist[random.randint(0, len(colorlist)-1)])
 
     def manualConf(self, configId):
+        # Configs that can be used for QMDP are: 1, 2, 9
+        # TODO: rest other than ones above
         if configId == 1: # Simple vertical & horizontal stacking (just for testing the Panels' drawing)
             self.goalid = 1 # the yellow object
             self.numobjects = 3
@@ -46,13 +51,14 @@ class TableInfo:
             self.colors = ["green", "yellow", "red"]
             self.full_occ_list = [ [], [], [] ]
             self.part_occ_list = [ [], [], [1] ]
-            self.c_grasps = [0.7, 0.8, 0.2 ]  # current grasps
-            self.f_grasps = [0.7, 0.8, 0.7 ]  # full grasps
+            self.c_grasps = [0.7, 0.8, 0.2 ] # current grasps
+            self.f_grasps = [0.7, 0.8, 0.7 ] # full grasps
             self.open_b = [ 0.3, 0.9, 0.2 ]  # belief probability that object is goal when the object is fully visible
             self.part_b = [ 0.3, 0.9, 0.3 ]  # belief probability that object is goal when the obejct is partially visible
             # self.focc_b = [ ]
             self.latticeids = range(1, self.numobjects+1)
         elif configId == 2: # Simple Vertical Stacking
+            # Complete for QMDP
             self.goalid = 0 # the yellow object on the left
             self.numobjects = 5
             self.ids = range(0, self.numobjects)
@@ -78,8 +84,8 @@ class TableInfo:
             self.part_occ_list = [ [], [], [], [], [] ]
             self.c_grasps = [ 0.9, 0.9, 0.7, 0.9, 0.7]
             self.f_grasps = [ 0.9, 0.9, 0.7, 0.9, 0.7]
-            self.open_b = [ ]
-            self.part_b = [ ]
+            self.open_b = [ 0.0, 0.0, 0.0, 0.0, 0.0 ]
+            self.part_b = [ 0.0, 0.0, 0.0, 0.0, 0.0 ]
             # self.focc_b = [ ]
             self.latticeids = range(1, self.numobjects+1)
         elif configId == 4: # Complex Vertical Stacking
@@ -96,6 +102,8 @@ class TableInfo:
             self.part_occ_list = [ [2,3,4,5], [2,3,4,5], [3,4,5], [4,5], [5], [], [], [] ]
             self.c_grasps = [ 0.9, 0.9, 0.2, 0.2, 0.3, 0.9, 0.7, 0.7 ]
             self.f_grasps = [ 0.9, 0.9, 0.8, 0.7, 0.8, 0.9, 0.7, 0.7 ]
+            self.open_b = [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
+            self.part_b = [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
             self.latticeids = range(1, self.numobjects+1)
         elif configId == 5: # Complex vertical Stacking 2 (same as configId=4 with kind of just x,y inverted)
             self.goalid = 1
@@ -111,6 +119,8 @@ class TableInfo:
             self.part_occ_list = [ [2,3,4,5], [2,3,4,5], [3,4,5], [4,5], [5], [], [], [] ]
             self.c_grasps = [ 0.9, 0.9, 0.2, 0.2, 0.3, 0.9, 0.7, 0.7 ]
             self.f_grasps = [ 0.9, 0.9, 0.8, 0.7, 0.8, 0.9, 0.7, 0.7 ]
+            self.open_b = [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
+            self.part_b = [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
             self.latticeids = range(1, self.numobjects+1)
         elif configId == 6: # Little compicated Vertical & horizontal Stacking
             self.goalid = 2
@@ -136,6 +146,29 @@ class TableInfo:
             self.c_grasps = [0.7, 0.9 ]
             self.f_grasps = [0.7, 0.9 ]
             self.latticeids = range(1, self.numobjects+1)
+        elif configId == 8: # Complex Vertical Stacking
+            # Complete for QMDP
+            self.goalid = 1
+            self.numobjects = 9
+            self.ids = range(0, self.numobjects)
+            self.positions  = [ [110, 10, 0],  #obj before stack 1
+                                [120, 50, 0], [150, 50, 0], [110, 50, 20], [130, 50, 40], [110, 60, 70], [140, 50, 90],  # Stack 1
+                                [200, 30, 0], [220, 40, 0] ] # stack 2
+            self.dimensions = [ [60, 30, 30],
+                                [20, 20, 20], [20, 20, 20], [70, 20, 20], [40, 30, 30], [70, 20, 20], [20, 20, 20],
+                                [20, 20, 20], [20, 20, 30] ]
+            self.colors = [ "black",
+                            "yellow", "blue", "green", "red", "gray", "black",
+                            "black", "blue" ]
+            # TODO: fix all below for the first object in the above list
+            self.full_occ_list = [ [], [2,3,4,5], [2,3,4,5], [],      [],    [],  [], [], [] ]
+            self.part_occ_list = [ [], [2,3,4,5], [2,3,4,5], [3,4,5], [4,5], [5], [], [], [] ]
+            self.c_grasps = [ 0.6, 0.9, 0.9, 0.2, 0.2, 0.3, 0.9, 0.7, 0.7 ]
+            self.f_grasps = [ 0.6, 0.9, 0.9, 0.8, 0.7, 0.8, 0.9, 0.7, 0.7 ]
+            self.open_b = [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
+            self.part_b = [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
+            self.latticeids = range(1, self.numobjects+1)
+
 
     def get_goal_vol(self):
         goal_ind = self.ids.index(self.goalid)
@@ -267,6 +300,7 @@ class TableInfo:
             print "Objects are:"
             for config in visible_objects:
                 print config
+
 
 # Instantiate TableInfo
 tableinfo = TableInfo(configId=int(sys.argv[1]))

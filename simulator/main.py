@@ -103,7 +103,6 @@ class MainWindow(wx.Frame):
         dlg.Destroy()
 
     def OnExecQMDP(self, e):
-        #TODO: calculate belief
         visible_objects = tableinfo.get_visible_objects()
         belief = tableinfo.get_current_belief(visible_objects)
         planner_type = 0 #QMDP
