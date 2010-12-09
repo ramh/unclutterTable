@@ -102,8 +102,8 @@ class TableInfo:
             self.part_occ_list = [ [], [], [], [], [] ]
             self.c_grasps = [ 0.9, 0.9, 0.7, 0.9, 0.7]
             self.f_grasps = [ 0.9, 0.9, 0.7, 0.9, 0.7]
-            self.open_b = [ 0.0, 0.0, 0.0, 0.0, 0.0 ]
-            self.part_b = [ 0.0, 0.0, 0.0, 0.0, 0.0 ]
+            self.open_b = [ 0.8, 0.2, 0.1, 0.2, 0.1 ]
+            self.part_b = [ 0.8, 0.2, 0.1, 0.2, 0.1 ]
             # self.focc_b = [ ]
             self.latticeids = range(1, self.numobjects+1)
         elif configId == 4: # Complex Vertical Stacking
@@ -339,7 +339,7 @@ class TableInfo:
         self.rem_ids.append(objId)
         x, y, z = self.positions.pop(index)
         x_offset = 50 * (self.rem_numobjects-1)
-        self.rem_positions.append([10+x_offset, y+180, z])
+        self.rem_positions.append([10+x_offset, y+180, 0])
         self.rem_dimensions.append(copy.copy(self.dimensions.pop(index)))
         self.rem_colors.append(self.colors.pop(index))
         self.rem_full_occ_list.append(copy.copy(self.full_occ_list.pop(index)))

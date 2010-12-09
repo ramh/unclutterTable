@@ -3,11 +3,13 @@ import random
 from TableInfo import TableInfo
 from qmdp.qmdp import *
 
-def run_simulation(configId, goalInd, planner_type):
+def run_simulation(configId, goalInd, open_b, part_b, planner_type):
     num_steps = 0
     successful_grasp_steps = 0
     has_experiment_finished = False
     tableinfo = TableInfo(configId, goalInd)
+    tableinfo.open_b = open_b
+    tableinfo.part_b = part_b
 
     while(not has_experiment_finished):
         visible_objects = tableinfo.get_visible_objects()

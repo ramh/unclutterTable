@@ -169,7 +169,8 @@ class MDP():
         temp2 = [0. if np.isnan(t) else t for t in temp]
         return -sum(temp2)
 
-    def expected_info_gain(self, ind, b, alpha = 0.03, grasp_prob = 0.7):
+    def expected_info_gain(self, ind, b, alpha = 0.03, grasp_prob = 0.5):
+        b = np.array(b)
         tbl_st = self.world.table_states[ind]
 
         act_values = []

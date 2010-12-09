@@ -66,14 +66,14 @@ class MainWindow(wx.Frame):
         self.toolbox2 = wx.BoxSizer(wx.HORIZONTAL)
         label1 = wx.StaticText(self, -1, "QMDP Solve: ")
         self.toolbox2.Add(label1)
-        buttonQMDP = wx.Button(self, -1, "Execute QMDP Step")
-        self.Bind(wx.EVT_BUTTON, self.OnExecQMDP, buttonQMDP)
+        buttonQMDP = wx.Button(self, 0, "Execute QMDP Step")
+        self.Bind(wx.EVT_BUTTON, self.OnExecStep, buttonQMDP)
         self.toolbox2.Add(buttonQMDP, 1, wx.EXPAND)
 
         label2 = wx.StaticText(self, -1, "Information Gain Solve: ")
         self.toolbox2.Add(label2)
-        buttonInfoGain = wx.Button(self, -1, "Execute InfoGain Step")
-        self.Bind(wx.EVT_BUTTON, self.OnExecInfoGain, buttonInfoGain)
+        buttonInfoGain = wx.Button(self, 1, "Execute InfoGain Step")
+        self.Bind(wx.EVT_BUTTON, self.OnExecStep, buttonInfoGain)
         self.toolbox2.Add(buttonInfoGain, 2, wx.EXPAND)
         # Add the tools
         self.sizer.Add(self.toolbox1, 0, wx.EXPAND)
@@ -101,17 +101,17 @@ class MainWindow(wx.Frame):
             f.close()
         dlg.Destroy()
 
-    def OnExecQMDP(self, e):
+    def OnExecStep(self, e):
         visible_objects = tableinfo.get_visible_objects()
         belief = tableinfo.get_current_belief(visible_objects)
-        planner_type = 0 #QMDP
+        planner_type = e.GetEventObject().GetId() #QMDP=0, InfoGain=1
         print "EXECUTE PLANNING Input: ", belief, visible_objects, planner_type
         print ", ".join([vis_obj.__str__() for vis_obj in visible_objects])
         latticeInd = execute_planning_step(belief, visible_objects, planner_type)
         print "EXECUTE PLANNING Output: ", latticeInd
 
         # somehow got objId and probability
-        title = "Result QMDP (doesnt work yet)"
+        title = "Result"
         if latticeInd==0:
             content = "I am no longer going to search for the object"
         elif latticeInd<0:
@@ -121,9 +121,6 @@ class MainWindow(wx.Frame):
             elif -latticeInd in tableinfo.rem_latticeids:
                 index = tableinfo.rem_latticeids.index(-latticeInd)
                 content = "Goal Object found: %d" % (tableinfo.rem_ids[index])
-            else:
-                raise Exception("Lost track of index")
-
         else:
             # Chance of successful removal of object = Full Graspability probability
             index = tableinfo.latticeids.index(latticeInd)
@@ -135,12 +132,6 @@ class MainWindow(wx.Frame):
                 self.removeObject(index)
             else:
                 content = "Failed to remove Object: %d since grasp prob is: %d" % (objId, prob*100)
-        msg_box = wx.MessageDialog(self, content, title, wx.OK | wx.CENTRE | wx.ICON_EXCLAMATION)
-        msg_box.ShowModal()   #Show the Dialog
-
-    def OnExecInfoGain(self, e):
-        title = "Result InfoGain"
-        content = "(doesnt work yet)"
         msg_box = wx.MessageDialog(self, content, title, wx.OK | wx.CENTRE | wx.ICON_EXCLAMATION)
         msg_box.ShowModal()   #Show the Dialog
 
