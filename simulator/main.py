@@ -4,7 +4,6 @@ import os
 from TableFrontPanel import *
 from TableTopPanel import *
 from DetailsPanel import *
-from Manipulator import *
 from qmdp.state_rep import *
 from qmdp.qmdp import *
 
@@ -138,13 +137,13 @@ class MainWindow(wx.Frame):
     def OnRemove(self, e):
         objId = e.GetEventObject().GetId()
         index = tableinfo.ids.index(objId)
-        Manipulator.removeObject(index)
+        tableinfo.removeObject(index)
         self.buttons[objId].Hide()
         self.drawTable()
 
     def removeObject(self, index):
         objId = tableinfo.ids[index]
-        Manipulator.removeObject(index)
+        tableinfo.removeObject(index)
         self.buttons[objId].Hide()
         self.drawTable()
 

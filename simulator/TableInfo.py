@@ -11,6 +11,7 @@ class TableInfo:
         # Overwrite the default goal index with what's passed
         if goalInd!= -1:
             self.goalid = goalInd
+        self.goal_vol = self.get_goal_vol()
         self.printConf()
 
 #TODO: Attempt to do Random Configuration is not that easy (commented for now)
@@ -183,7 +184,7 @@ class TableInfo:
     def get_full_occ_bel(self, ind):
         CLUTTER_CONST = 1.0 / 180000.
         occ_vol = self.get_occ_vol(ind)
-        return CLUTTER_CONST * occ_vol * max((1. - self.get_goal_vol() / occ_vol), 0.)
+        return CLUTTER_CONST * occ_vol * max((1. - self.goal_vol / occ_vol), 0.)
 
     def joint_belief(self, obj_bel):
         ret_b = [1.] * (len(obj_bel) + 1)
@@ -223,8 +224,6 @@ class TableInfo:
                 # do partial
                 cur_bel = self.part_b[ind]
             obj_bel[i] = cur_bel
-            print "Current Belief : ", cur_bel, " Obj_bel[i] : ", obj_bel[i]
-            print "Obj_bel : ", obj_bel
             # do full occ
             full_occ_bel = self.get_full_occ_bel(ind)
             obj_bel[i + len(vis_objs)] = full_occ_bel
@@ -249,7 +248,6 @@ class TableInfo:
         return tbl_objs
 
     def sortonY(self):
-        print "Sorting on Y"
         for i in range(0, self.numobjects-1):
             for j in range(i+1, self.numobjects):
                 if(self.positions[i][1] < self.positions[j][1]):
@@ -267,7 +265,6 @@ class TableInfo:
                     # tmp = self.focc_b[i]; self.focc_b[i] = self.focc_b[j]; self.focc_b[j] = tmp
 
     def sortonZ(self):
-        print "Sorting on Z"
         for i in range(0, self.numobjects-1):
             for j in range(i+1, self.numobjects):
                 if(self.positions[i][2] > self.positions[j][2]):
@@ -283,6 +280,23 @@ class TableInfo:
                     tmp = self.open_b[i]; self.open_b[i] = self.open_b[j]; self.open_b[j] = tmp
                     tmp = self.part_b[i]; self.part_b[i] = self.part_b[j]; self.part_b[j] = tmp
                     # tmp = self.focc_b[i]; self.focc_b[i] = self.focc_b[j]; self.focc_b[j] = tmp
+
+    def removeObject(self, index):
+        self.numobjects -= 1
+        objId = self.ids.pop(index)
+        self.positions.pop(index)
+        self.dimensions.pop(index)
+        self.colors.pop(index)
+        self.full_occ_list.pop(index)
+        self.part_occ_list.pop(index)
+        self.latticeids.pop(index)
+
+        for pol in self.part_occ_list:
+            if pol.count(objId) > 0:
+                pol.remove(objId)
+        for fol in self.full_occ_list:
+            if fol.count(objId) > 0:
+                fol.remove(objId)
 
     def printConf(self):
         print "Numobjects : %s" % self.numobjects
