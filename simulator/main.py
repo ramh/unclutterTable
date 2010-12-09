@@ -105,11 +105,13 @@ class MainWindow(wx.Frame):
     def OnExecQMDP(self, e):
         #TODO: calculate belief
         visible_objects = tableinfo.get_visible_objects()
+        belief = tableinfo.get_current_belief(visible_objects)
         planner_type = 0 #QMDP
-        objId = execute_planning_step(belief, visible_objects, planner_type)
+        print "EXECUTE PLANNING Input: ", belief, visible_objects, planner_type
+        latticeInd = execute_planning_step(belief, visible_objects, planner_type)
+        print "EXECUTE PLANNING Output: ", latticeInd
 
         # somehow got objId and probability
-        latticeInd = 1
         title = "Result QMDP (doesnt work yet)"
         if latticeInd==0:
             content = "I am no longer going to search for the object"
@@ -121,8 +123,8 @@ class MainWindow(wx.Frame):
             prob = tableinfo.f_grasps[index]
             rand = random.random()
             if rand < prob:
-                content = "Removed Object: %d" % (latticeInd)
-                self.removeObject(latticeInd)
+                content = "Removed Object: %d" % (index)
+                self.removeObject(index)
             else:
                 content = "Failed to remove Object: %d since grasp prob is: %d" % (latticeInd, prob*100)
         msg_box = wx.MessageDialog(self, content, title, wx.OK | wx.CENTRE | wx.ICON_EXCLAMATION)
@@ -141,8 +143,7 @@ class MainWindow(wx.Frame):
         self.buttons[objId].Hide()
         self.drawTable()
 
-    def removeObject(self, latticeInd):
-        index = tableinfo.latticeids.index(latticeInd)
+    def removeObject(self, index):
         objId = tableinfo.ids[index]
         Manipulator.removeObject(index)
         self.buttons[objId].Hide()
