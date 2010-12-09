@@ -148,13 +148,14 @@ class TableInfo:
         return dims[0] * dims[1] * (dims[2] + pos[2])
 
     def get_full_occ_bel(self, ind):
-        CLUTTER_CONST = 0.5 / 1800000.
+        CLUTTER_CONST = 1.0 / 180000.
         occ_vol = self.get_occ_vol(ind)
-        return CLUTTER_CONST * occ_vol * (1. - self.get_goal_vol() / occ_vol)
+        return CLUTTER_CONST * occ_vol * max((1. - self.get_goal_vol() / occ_vol), 0.)
 
     def joint_belief(self, obj_bel):
         ret_b = [1.] * (len(obj_bel) + 1)
         tbl_b = 1.
+        print "obj_bel", obj_bel
         for i, b_i in enumerate(obj_bel):
                 ret_b[i] *= b_i
                 for j, b_j in enumerate(obj_bel):
@@ -177,10 +178,9 @@ class TableInfo:
         return out_b
 
     def get_current_belief(self, vis_objs):
-        print "visible objs", ", ".join([vis_obj.__str__() for vis_obj in vis_objs])
-        self.printConf()
+        #print "visible objs", ", ".join([vis_obj.__str__() for vis_obj in vis_objs])
+        #self.printConf()
         obj_bel = [0.] * (len(vis_objs) * 2)
-        #obj_bel = np.zeros(len(vis_objs) * 2)
         for i, obj in enumerate(vis_objs):
             ind = self.latticeids.index(obj.obj_id)
             if len(obj.obstructors) == 0:
@@ -190,10 +190,12 @@ class TableInfo:
                 # do partial
                 cur_bel = self.part_b[ind]
             obj_bel[i] = cur_bel
+            print "Current Belief : ", cur_bel, " Obj_bel[i] : ", obj_bel[i]
+            print "Obj_bel : ", obj_bel
             # do full occ
             full_occ_bel = self.get_full_occ_bel(ind)
-            obj_bel[i * 2] = full_occ_bel
-        print "obj_bel", obj_bel
+            obj_bel[i + len(vis_objs)] = full_occ_bel
+
         return self.joint_belief(obj_bel)
 
     def get_visible_objects(self):
@@ -206,13 +208,9 @@ class TableInfo:
             tbl_objs.append(new_tbl_obj)
             tbl_inds.append(i)
 
-        print tbl_inds
         for n_obj in tbl_objs:
             n_obsts = []
             for o_obst in n_obj.obstructors:
-                print "latids", self.latticeids
-                print "ob", o_obst
-                print self.latticeids.index(o_obst)
                 n_obsts.append(tbl_objs[tbl_inds.index(self.latticeids.index(o_obst))])
             n_obj.obstructors = n_obsts
         return tbl_objs
