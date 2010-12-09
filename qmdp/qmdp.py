@@ -6,7 +6,7 @@ import copy
 from state_rep import *
 
 class MDP():
-    def __init__(self, t_world, g_cost = -1., goal_rew = 5., exit_cost = -1., disc=1.):
+    def __init__(self, t_world, g_cost = -1., goal_rew = 5., exit_cost = -3., disc=1.):
         self.world = copy.copy(t_world)
         self.grasp_cost = g_cost
         self.goal_reward = goal_rew

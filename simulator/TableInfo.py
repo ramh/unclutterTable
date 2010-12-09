@@ -15,6 +15,20 @@ class TableInfo:
         self.goal_vol = self.get_goal_vol()
         self.printConf()
 
+     def init_rem_objs(self):
+        self.rem_numobjects = 0
+        self.rem_ids = []
+        self.rem_positions  = []
+        self.rem_dimensions = []
+        self.rem_colors = []
+        self.rem_full_occ_list = []
+        self.rem_part_occ_list = []
+        self.rem_c_grasps = []
+        self.rem_f_grasps = []
+        self.rem_open_b = []
+        self.rem_part_b = []
+        
+
 #TODO: Attempt to do Random Configuration is not that easy (commented for now)
 #    def randomConf(self):
 #        maxobjects = 5
@@ -290,13 +304,15 @@ class TableInfo:
 
     def removeObject(self, index):
         self.numobjects -= 1
+        self.rem_numobjects += 1
         objId = self.ids.pop(index)
-        self.positions.pop(index)
-        self.dimensions.pop(index)
-        self.colors.pop(index)
-        self.full_occ_list.pop(index)
-        self.part_occ_list.pop(index)
-        self.latticeids.pop(index)
+        self.rem_ids.append(objId)
+        self.rem_positions.append(self.positions.pop(index))
+        self.rem_dimension.append(sself.dimensions.pop(index))
+        self.rem_color.append(sself.colors.pop(index))
+        self.rem_full_occ_list.append(self.full_occ_list.pop(index))
+        self.rem_part_occ_list.append(self.part_occ_list.pop(index))
+        self.rem_latticeids.append(self.latticeids.pop(index))
 
         for pol in self.part_occ_list:
             if pol.count(objId) > 0:
