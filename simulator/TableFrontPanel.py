@@ -26,6 +26,13 @@ class TableFrontPanel(wx.Panel):
         # Sort on Y for front view
         tableinfo.sortonY()
 
+        # First Draw Removed Objects (assumption is they are not going to be stacked)
+        for i in range(0, tableinfo.rem_numobjects):
+            self.dc.SetBrush(wx.Brush(tableinfo.rem_colors[i], wx.SOLID))
+            objectX = tableX + tableinfo.rem_positions[i][0]
+            objectZ = tableZ - tableinfo.rem_positions[i][2] - tableinfo.rem_dimensions[i][2]
+            self.dc.DrawRectangle(objectX, objectZ, tableinfo.rem_dimensions[i][0], tableinfo.rem_dimensions[i][2])
+
         # Draw Table Objects
         for i in range(0, tableinfo.numobjects):
             self.dc.SetBrush(wx.Brush(tableinfo.colors[i], wx.SOLID))

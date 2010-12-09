@@ -29,7 +29,6 @@ class TableInfo:
         self.rem_open_b = []
         self.rem_part_b = []
         self.rem_latticeids = []
-        
 
 #TODO: Attempt to do Random Configuration is not that easy (commented for now)
 #    def randomConf(self):
@@ -323,12 +322,19 @@ class TableInfo:
         self.rem_numobjects += 1
         objId = self.ids.pop(index)
         self.rem_ids.append(objId)
-        self.rem_positions.append(self.positions.pop(index))
+        x, y, z = self.positions.pop(index)
+        x_offset = 50 * (self.rem_numobjects-1)
+        self.rem_positions.append([10+x_offset, y+180, z])
+        print "Rem Pos : ", self.rem_positions
         self.rem_dimensions.append(self.dimensions.pop(index))
         self.rem_colors.append(self.colors.pop(index))
         self.rem_full_occ_list.append(self.full_occ_list.pop(index))
         self.rem_part_occ_list.append(self.part_occ_list.pop(index))
         self.rem_latticeids.append(self.latticeids.pop(index))
+        self.rem_c_grasps.append(self.c_grasps.pop(index))
+        self.rem_f_grasps.append(self.c_grasps.pop(index))
+        self.rem_open_b.append(self.c_grasps.pop(index))
+        self.rem_part_b.append(self.c_grasps.pop(index))
 
         for pol in self.part_occ_list:
             if pol.count(objId) > 0:
