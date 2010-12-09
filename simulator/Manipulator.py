@@ -19,4 +19,4 @@ class Manipulator:
             if fol.count(objId) > 0:
                 fol.remove(objId)
 
-        tableinfo.printVisibleConf()
+        #tableinfo.printVisibleConf()
