@@ -64,15 +64,15 @@ class MainWindow(wx.Frame):
             self.toolbox1.Add(buttonRemove, 1, wx.EXPAND)
         # Tools for QMDP & InfoGain
         self.toolbox2 = wx.BoxSizer(wx.HORIZONTAL)
-        label1 = wx.StaticText(self, -1, "QMDP Solve: ")
+        label1 = wx.StaticText(self, 1, "QMDP Solve: ")
         self.toolbox2.Add(label1)
-        buttonQMDP = wx.Button(self, 0, "Execute QMDP Step")
+        buttonQMDP = wx.Button(self, -1, "Execute QMDP Step")
         self.Bind(wx.EVT_BUTTON, self.OnExecStep, buttonQMDP)
         self.toolbox2.Add(buttonQMDP, 1, wx.EXPAND)
 
-        label2 = wx.StaticText(self, -1, "Information Gain Solve: ")
+        label2 = wx.StaticText(self, 2, "Information Gain Solve: ")
         self.toolbox2.Add(label2)
-        buttonInfoGain = wx.Button(self, 1, "Execute InfoGain Step")
+        buttonInfoGain = wx.Button(self, -2, "Execute InfoGain Step")
         self.Bind(wx.EVT_BUTTON, self.OnExecStep, buttonInfoGain)
         self.toolbox2.Add(buttonInfoGain, 2, wx.EXPAND)
         # Add the tools
