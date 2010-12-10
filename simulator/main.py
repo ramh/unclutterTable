@@ -104,7 +104,10 @@ class MainWindow(wx.Frame):
     def OnExecStep(self, e):
         visible_objects = tableinfo.get_visible_objects()
         belief = tableinfo.get_current_belief(visible_objects)
-        planner_type = e.GetEventObject().GetId() #QMDP=0, InfoGain=1
+        if(e.GetEventObject().GetId() == -1):
+            planner_type = 0 #QMDP=0
+        else:
+            planner_type = 1 #InfoGain=1
         print "EXECUTE PLANNING Input: ", belief, visible_objects, planner_type
         print ", ".join([vis_obj.__str__() for vis_obj in visible_objects])
         latticeInd = execute_planning_step(belief, visible_objects, planner_type)
@@ -141,6 +144,15 @@ class MainWindow(wx.Frame):
         tableinfo.removeObject(index)
         self.buttons[objId].Hide()
         self.drawTable()
+        # Making POMDP Observations random
+        rand = random.random()
+        title = "Observation Uncertainity"
+        if rand < 0.8:
+          content = "Take the correct Observation"
+        else:
+          content = "Take observation %d" % (random.randint(1,3))
+        msg_box = wx.MessageDialog(self, content, title, wx.OK | wx.CENTRE | wx.ICON_EXCLAMATION)
+        msg_box.ShowModal()   #Show the Dialog
 
     def removeObject(self, index):
         objId = tableinfo.ids[index]
