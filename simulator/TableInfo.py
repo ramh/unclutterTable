@@ -82,7 +82,7 @@ class TableInfo:
             self.ids = range(0, self.numobjects)
             self.positions  = [ [120, 20, 0], [115, 30, 20], [110, 10, 30], [190, 30, 0], [180, 10, 10] ]
             self.dimensions = [ [20, 20, 20], [30, 10, 10], [40, 40, 40], [30, 10, 10], [40, 40, 40] ]
-            self.colors = ["yellow", "blue", "green", "yellow", "blue"]
+            self.colors = ["yellow", "blue", "green", "brown", "blue"]
             self.full_occ_list = [ [2], [2], [], [4], [] ]
             self.part_occ_list = [ [1, 2], [2], [], [4], [] ]
             self.c_grasps = [ 0.9, 0.8, 0.7, 0.9, 0.8]
@@ -92,12 +92,12 @@ class TableInfo:
             # self.focc_b = [ ]
             self.latticeids = range(1, self.numobjects+1)
         elif configId == 3: # Simple Horizontal Stacking (connected)
-            self.goalid = 4
+            self.goalid = 0
             self.numobjects = 5
             self.ids = range(0, self.numobjects)
             self.positions  = [ [120, 80, 0], [115, 50, 0], [110, 10, 0], [190, 50, 0], [180, 10, 0] ]
             self.dimensions = [ [20, 20, 20], [10, 30, 10], [40, 40, 40], [10, 30, 10], [40, 40, 40] ]
-            self.colors = ["yellow", "blue", "green", "yellow", "blue"]
+            self.colors = ["yellow", "blue", "green", "brown", "blue"]
             self.full_occ_list = [ [], [], [], [], [] ]
             self.part_occ_list = [ [], [], [], [], [] ]
             self.c_grasps = [ 0.9, 0.9, 0.7, 0.9, 0.7]
@@ -107,31 +107,31 @@ class TableInfo:
             # self.focc_b = [ ]
             self.latticeids = range(1, self.numobjects+1)
         elif configId == 4: # Complex Vertical Stacking
-            self.goalid = 1
+            self.goalid = 0
             self.numobjects = 8
             self.ids = range(0, self.numobjects)
             self.positions  = [ [120, 20, 0], [150, 20, 0], [110, 20, 20], [130, 20, 40], [110, 30, 70], [140, 20, 90],  # Stack 1
                                 [200, 30, 0], [220, 40, 0] ]
             self.dimensions = [ [20, 20, 20], [20, 20, 20], [70, 20, 20], [40, 30, 30], [70, 20, 20], [20, 20, 20],  # Stack 2
                                 [20, 20, 20], [20, 20, 30] ]
-            self.colors = ["yellow", "blue", "green", "yellow", "gray", "black",
+            self.colors = ["yellow", "blue", "green", "brown", "gray", "black",
                            "black", "blue" ]
             self.full_occ_list = [ [2,3,4,5], [2,3,4,5], [],      [],    [],  [], [], [] ]
             self.part_occ_list = [ [2,3,4,5], [2,3,4,5], [3,4,5], [4,5], [5], [], [], [] ]
             self.c_grasps = [ 0.9, 0.9, 0.2, 0.2, 0.3, 0.9, 0.7, 0.7 ]
             self.f_grasps = [ 0.9, 0.9, 0.8, 0.7, 0.8, 0.9, 0.7, 0.7 ]
-            self.open_b = [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
-            self.part_b = [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
+            self.open_b = [ 0.9, 0.1, 0.1, 0.2, 0.1, 0.1, 0.1, 0.1 ]
+            self.part_b = [ 0.9, 0.1, 0.2, 0.3, 0.2, 0.1, 0.1, 0.1 ]
             self.latticeids = range(1, self.numobjects+1)
         elif configId == 5: # Complex vertical Stacking 2 (same as configId=4 with kind of just x,y inverted)
-            self.goalid = 1
+            self.goalid = 0
             self.numobjects = 8
             self.ids = range(0, self.numobjects)
             self.positions  = [ [120, 20, 0], [120, 50, 0], [120, 10, 20], [120, 30, 40], [130, 10, 70], [130, 40, 90],  # Stack 1
                                 [230, 30, 0], [240, 50, 0] ]
             self.dimensions = [ [20, 20, 20], [20, 20, 20], [20, 70, 20], [30, 40, 30], [20, 70, 20], [20, 20, 20],  # Stack 2
                                 [20, 20, 20], [20, 20, 30] ]
-            self.colors = ["yellow", "blue", "green", "yellow", "gray", "black",
+            self.colors = ["yellow", "blue", "green", "brown", "gray", "black",
                            "black", "blue" ]
             self.full_occ_list = [ [2,3,4,5], [2,3,4,5], [],      [],    [],  [], [], [] ]
             self.part_occ_list = [ [2,3,4,5], [2,3,4,5], [3,4,5], [4,5], [5], [], [], [] ]
@@ -178,13 +178,12 @@ class TableInfo:
             self.colors = [ "black",
                             "yellow", "blue", "green", "red", "gray", "black",
                             "black", "blue" ]
-            # TODO: fix all below for the first object in the above list
             self.full_occ_list = [ [], [2,3,4,5], [2,3,4,5], [],      [],    [],  [], [], [] ]
             self.part_occ_list = [ [], [2,3,4,5], [2,3,4,5], [3,4,5], [4,5], [5], [], [], [] ]
             self.c_grasps = [ 0.6, 0.9, 0.9, 0.2, 0.2, 0.3, 0.9, 0.7, 0.7 ]
             self.f_grasps = [ 0.6, 0.9, 0.9, 0.8, 0.7, 0.8, 0.9, 0.7, 0.7 ]
-            self.open_b = [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
-            self.part_b = [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
+            self.open_b = [ 0.1, 0.9, 0.1, 0.1, 0.2, 0.1, 0.1, 0.1, 0.1 ]
+            self.part_b = [ 0.1, 0.9, 0.1, 0.2, 0.3, 0.2, 0.1, 0.1, 0.1 ]
             self.latticeids = range(1, self.numobjects+1)
 
     def set_vision(self, open_b, part_b):
