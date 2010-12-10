@@ -155,7 +155,7 @@ class MainWindow(wx.Frame):
         if rand < 0.8:
           content = "Take the correct Observation"
         else:
-          content = "Take observation %d" % (random.randint(1,3))
+          content = "Take observation %d for %dth view" % (random.randint(1,3), random.randint(1,2))
         msg_box = wx.MessageDialog(self, content, title, wx.OK | wx.CENTRE | wx.ICON_EXCLAMATION)
         msg_box.ShowModal()   #Show the Dialog
 
