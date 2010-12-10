@@ -42,7 +42,7 @@ class Evaluator():
                     print "Vision part:", ", ".join([ "%1.3f" % (o) for o in part_b])
                     print self.trial_data[conf_ind][goal_ind][vis_ind]
 
-    def run_eval(self, configs = range(4, 5), num_goals = 2, num_visions = 5, num_runs = 3):
+    def run_eval(self, configs = [3, 4, 8], num_goals = 3, num_visions = 2, num_runs = 4):
         n_runs = 0
         for config_id in configs:
             print "-" * 20, " Config %d " % (config_id), "-" * 20
@@ -55,7 +55,14 @@ class Evaluator():
                 #t_info = TableInfo(config_id, g_trial)
                 #b_init = t_info.get_current_belief(t_info.get_visible_objects())
                 #goal_ind = sample_dist(b_init)
-                t_info = TableInfo(config_id)
+                blah = True
+                while blah:
+                    try:
+                        t_info = TableInfo(config_id)
+                        blah = False
+                    except Exception:
+                        print "Blah"
+                        blah = True
                 
                 # only get goals that are buried
                 n_tries = 0
@@ -72,28 +79,66 @@ class Evaluator():
                 for v_trial in range(num_visions):
                     print "-" * 20, " Vision %d " % (v_trial), "-" * 20
                     open_b, part_b = simulate_vision(t_info.numobjects, goal_ind)
+                    cur_data_r = [[], [], []]
                     cur_data_q = [[], [], []]
                     cur_data_i = [[], [], []]
                     for g_r_trial in range(num_runs):
-                        num_steps, is_success, succ_grasp_steps = run_simulation(config_id, goal_ind, copy.copy(open_b), copy.copy(part_b), 0)
-                        cur_data_q[0].append(num_steps)
-                        cur_data_q[1].append(is_success)
-                        cur_data_q[2].append(succ_grasp_steps)
-                        print "-" * 20, " Results Q ", "-" * 20
-                        print num_steps, is_success, succ_grasp_steps
+                        try:
+                            num_steps, is_success, succ_grasp_steps = run_simulation(config_id, goal_ind, copy.copy(open_b), copy.copy(part_b), 2)
+                            cur_data_r[0].append(num_steps)
+                            cur_data_r[1].append(is_success)
+                            cur_data_r[2].append(succ_grasp_steps)
+                            print "-" * 20, " Results R ", "-" * 20
+                            print num_steps, is_success, succ_grasp_steps
 
-                        num_steps, is_success, succ_grasp_steps = run_simulation(config_id, goal_ind, copy.copy(open_b), copy.copy(part_b), 1)
-                        cur_data_i[0].append(num_steps)
-                        cur_data_i[1].append(is_success)
-                        cur_data_i[2].append(succ_grasp_steps)
-                        print "-" * 20, " Results I ", "-" * 20
-                        print num_steps, is_success, succ_grasp_steps
+                            num_steps, is_success, succ_grasp_steps = run_simulation(config_id, goal_ind, copy.copy(open_b), copy.copy(part_b), 0)
+                            cur_data_q[0].append(num_steps)
+                            cur_data_q[1].append(is_success)
+                            cur_data_q[2].append(succ_grasp_steps)
+                            print "-" * 20, " Results Q ", "-" * 20
+                            print num_steps, is_success, succ_grasp_steps
 
-                        print "Number of runs: %3d" % n_runs
-                        n_runs += 1
+                            num_steps, is_success, succ_grasp_steps = run_simulation(config_id, goal_ind, copy.copy(open_b), copy.copy(part_b), 1)
+                            cur_data_i[0].append(num_steps)
+                            cur_data_i[1].append(is_success)
+                            cur_data_i[2].append(succ_grasp_steps)
+                            print "-" * 20, " Results I ", "-" * 20
+                            print num_steps, is_success, succ_grasp_steps
+
+                            print "Number of runs: %3d" % n_runs
+                            n_runs += 1
+                        except Exception:
+                            print "Problem, but continuing"
+
+                    cdis = []
+                    for cdi, cd in enumerate(cur_data_r):
+                        if len(cd) == 0:
+                            cdis.append(cdi)
+                    ncdi = 0
+                    for cdi in cdis:
+                        del cur_data_i[cdi-ncdi]
+                        ncdi += 1
+                    cdis = []
+                    for cdi, cd in enumerate(cur_data_q):
+                        if len(cd) == 0:
+                            cdis.append(cdi)
+                    ncdi = 0
+                    for cdi in cdis:
+                        del cur_data_i[cdi-ncdi]
+                        ncdi += 1
+                    cdis = []
+                    for cdi, cd in enumerate(cur_data_i):
+                        if len(cd) == 0:
+                            cdis.append(cdi)
+                    ncdi = 0
+                    for cdi in cdis:
+                        del cur_data_i[cdi-ncdi]
+                        ncdi += 1
+
+                    avg_data_r = [float(sum(d))/len(d) for d in cur_data_r]
                     avg_data_q = [float(sum(d))/len(d) for d in cur_data_q]
                     avg_data_i = [float(sum(d))/len(d) for d in cur_data_i]
-                    cur_c_g_data.append([avg_data_q, avg_data_i])
+                    cur_c_g_data.append([avg_data_r, avg_data_q, avg_data_i])
                     cur_c_g_visions.append([open_b, part_b])
 
                 cur_goal_ids.append(goal_ind)

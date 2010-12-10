@@ -136,6 +136,11 @@ def table_world_generator(vis_objs):
                     if rem_i == -1:
                         raise Exception("Bad obj structure")
 
+                    if len(new_tbl_objs[rem_i].obstructors) != 0:
+                        graspability = obj.cur_grasp
+                    else:
+                        graspability = obj.unobs_grasp
+
                     new_tbl_objs[rem_i].has_moved = True
                     new_tbl_objs[rem_i].obstructors = []
                     new_tbl_objs[rem_i].obstructing = []
@@ -151,11 +156,6 @@ def table_world_generator(vis_objs):
                         cur_level.append(new_state)
 
                     # Create action
-                    if len(new_tbl_objs[rem_i].obstructors) == 0:
-                        graspability = obj.cur_grasp
-                    else:
-                        graspability = obj.unobs_grasp
-
                     sf_acts = [ [ graspability, new_state ], [ 1. - graspability, table_state ] ]
                     act = TableAction(rem_i, table_state, sf_acts)
                     table_state.from_actions.append(act)

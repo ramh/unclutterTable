@@ -1,5 +1,6 @@
 #! /usr/bin/python
 
+import random
 import numpy as np
 from math import fabs
 import copy
@@ -84,7 +85,10 @@ class MDP():
         V_list = []
         for s in range(N+1):
             if s != N:
-                V_list.append(self.value_iteration(s))
+                if b[s] > 0.01:
+                    V_list.append(self.value_iteration(s))
+                else:
+                    V_list.append([])
             else:
                 V_list.append(self.value_iteration(-1))
 
@@ -94,9 +98,13 @@ class MDP():
             for act_ind in successor_actions:
                 q_mdp = 0.
                 for s in range(N+1):
-                    prev_V = self.compute_prev_v(s, act_ind, V_list[s])
-                    reward = self.grasp_cost
-                    Q = reward + self.discount * prev_V
+                    if b[s] > 0.01:
+                        prev_V = self.compute_prev_v(s, act_ind, V_list[s])
+                        reward = self.grasp_cost
+                        Q = reward + self.discount * prev_V
+                    else:
+                        reward = self.grasp_cost
+                        Q = reward
 
                     q_mdp += b[s] * Q
                 act_q_mdp_list.append(q_mdp)
@@ -207,6 +215,20 @@ class MDP():
         successor_actions = self.succ_acts(ind)
         return tbl_st.from_actions[np.argmax(act_values)].action_id, zip(*[successor_actions, act_values])
 
+    def random_top(self, belief, ind):
+        successor_actions = self.succ_acts(ind)
+        top_act_inds = []
+        for act_ind in successor_actions:
+            act = self.world.table_actions[act_ind]
+            if len(act.state_init.table_objects[act.obj_rem].obstructors) == 0:
+                if act.act_type == GRASP_GOAL and belief[act.obj_rem] > 0.5:
+                    return act_ind, [[0, 0.0]]
+                top_act_inds.append(act_ind)
+        return top_act_inds[random.randint(0, len(top_act_inds)-1)], []
+
+            
+        
+
     def call_planning(self, belief, planner_type, state_index=0):
         if not np.allclose(np.linalg.norm(belief, 1), 1.):
             print "Belief not normalized, normalizing"
@@ -215,14 +237,18 @@ class MDP():
         if planner_type == QMDP:
             act_id, act_vals = self.q_mdp_policy(state_index, belief)
             act = self.world.table_actions[act_id]
+            print "Action Values", "[ " + "\n\t\t".join((self.world.table_actions[act_val[0]].__str__() + " : " + str(act_val[1])) for act_val in act_vals) + " ]"
+            print "Action Taken:", self.world.table_actions[act_id].__str__()
         elif planner_type == EXPECTEDINFO:
             act_id, act_vals = self.expected_info_gain(state_index, belief)
+            print "Action Values", "[ " + "\n\t\t".join((self.world.table_actions[act_val[0]].__str__() + " : " + str(act_val[1])) for act_val in act_vals) + " ]"
+            print "Action Taken:", self.world.table_actions[act_id].__str__()
+        elif planner_type == RANDOMTOP:
+            act_id, act_vals = self.random_top(belief, state_index)
         else:
             raise Exception("Bad planner_type")
             return None
 
-        print "Action Values", "[ " + "\n\t\t".join((self.world.table_actions[act_val[0]].__str__() + " : " + str(act_val[1])) for act_val in act_vals) + " ]"
-        print "Action Taken:", self.world.table_actions[act_id].__str__()
         act = self.world.table_actions[act_id]
         if act.act_type == GRASP_REMOVE:
             obj_id = act.state_init.table_objects[act.obj_rem].obj_id
@@ -237,6 +263,7 @@ class MDP():
         
 QMDP = 0
 EXPECTEDINFO = 1
+RANDOMTOP = 2
 
 def execute_planning_step(belief, visible_objs, planner_type):
     mdp = MDP(table_world_generator(visible_objs))

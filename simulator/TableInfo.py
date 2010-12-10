@@ -3,7 +3,7 @@ import random
 import sys
 import copy
 from qmdp.state_rep import TableObject
-from utils import half_gauss, part_gauss
+from utils import half_gauss, part_gauss, simulate_vision
 import numpy as np
 
 class TableInfo:
@@ -184,6 +184,123 @@ class TableInfo:
             self.f_grasps = [ 0.6, 0.9, 0.9, 0.8, 0.7, 0.8, 0.9, 0.7, 0.7 ]
             self.open_b = [ 0.1, 0.9, 0.1, 0.1, 0.2, 0.1, 0.1, 0.1, 0.1 ]
             self.part_b = [ 0.1, 0.9, 0.1, 0.2, 0.3, 0.2, 0.1, 0.1, 0.1 ]
+            self.latticeids = range(1, self.numobjects+1)
+        elif configId == 12: # Avoid difficult grasp
+            # Complete for QMDP
+            self.goalid = 1
+            self.numobjects = 7
+            self.ids = range(0, self.numobjects)
+            self.positions  = [ [10, 10, 0],  #obj before stack 1
+                                [110, 50, 0], [150, 50, 0], [110, 50, 20], [130, 50, 40],
+                                [200, 30, 0], [240, 50, 0] ] # stack 2
+            self.dimensions = [ [40, 20, 30],
+                                [10, 30, 10], [20, 20, 20], [70, 20, 20], [40, 30, 30], [70, 20, 20], 
+                                [20, 50, 20], [20, 50, 30] ]
+            self.colors = [ "blue",
+                            "yellow", "blue", "green", "red", 
+                            "black", "blue" ]
+            self.full_occ_list = [ [], [], [2,3,4], [], [],  [], [], [] ]
+            self.part_occ_list = [ [], [3], [3,4], [4], [], [], [], [] ]
+            self.c_grasps = [ 0.9, 0.3, 0.9, 0.2, 0.2, 0.4, 0.9, 0.7 ]
+            self.f_grasps = [ 0.9, 0.9, 0.9, 0.8, 0.7, 0.4, 0.9, 0.7 ]
+            self.open_b = [ 0.1, 0.9, 0.1, 0.1, 0.2, 0.1, 0.1, 0.1 ]
+            self.part_b = [ 0.1, 0.6, 0.1, 0.2, 0.3, 0.2, 0.1, 0.1 ]
+            self.latticeids = range(1, self.numobjects+1)
+        elif configId == 13: # multiple goals
+            # Complete for QMDP
+            self.goalid = 1
+            self.numobjects = 6
+            self.ids = range(0, self.numobjects)
+            self.positions  = [ [250, 50, 0],  #obj before stack 1
+                                [110, 30, 0], [50, 20, 0], [110, 50, 10], [130, 50, 30],
+                                [200, 50, 10]] # stack 2
+            self.dimensions = [ [10, 40, 10],
+                                [10, 30, 10], [20, 20, 20], [70, 20, 20], [40, 30, 30], [70, 20, 20], 
+                                [20, 30, 20] ]
+            self.colors = [ "yellow",
+                            "yellow", "blue", "green", "red", 
+                            "black" ]
+            self.full_occ_list = [ [], [], [], [], [],  [] ]
+            self.part_occ_list = [ [5], [3], [], [4], [], [] ]
+            self.c_grasps = [ 0.1, 0.3, 0.7, 0.1, 0.7, 0.9 ]
+            self.f_grasps = [ 0.9, 0.9, 0.7, 0.9, 0.7, 0.9 ]
+            self.open_b = [ 0.1, 0.9, 0.1, 0.1, 0.2, 0.1 ]
+            self.part_b = [ 0.5, 0.6, 0.1, 0.2, 0.3, 0.2 ]
+            self.latticeids = range(1, self.numobjects+1)
+        elif configId == -100:
+            self.numobjects = random.randint(6, 9)
+            self.goalid = 0
+            self.ids = range(0, self.numobjects)
+            self.positions = []
+            self.dimensions = []
+            self.colors = []
+            self.c_grasps = []
+            self.f_grasps = []
+            self.full_occ_list = [ ]
+            self.part_occ_list = [ ]
+            c_names = [ "black", "blue", "green", "red", "gray" ]
+
+            def in_cube(pt, pos, dims):
+                for i in range(2):
+                    if not (pt[i] > pos[i] and pt[i] < pos[i] + dims[i]):
+                        return False
+                return True
+
+            def all_in_cube(pos, dims, o_pos, o_dims):
+                for o_pt in enum_pts(pos, dims):
+                    if not in_cube(o_pt, o_pos, o_dims):
+                        return False
+                return True
+
+            def enum_pts(pos, dims):
+                ret_pts = []
+                for i in range(2):
+                    for j in range(2):
+                        ret_pts.append([pos[0] + i * dims[0], pos[1] + j * dims[1], 0])
+                return ret_pts
+
+            for n in range(self.numobjects):
+                pos = [random.randint(50, 130), random.randint(5, 60), 0]
+                if n == 0:
+                    dims = [10, 10, 10]
+                else:
+                    dims = [random.randint(5, 50), random.randint(5, 50), random.randint(15, 50)]
+                inters = False
+                max_h = -1
+                for i, o_pos in enumerate(self.positions):
+                    o_dims = self.dimensions[i]
+                    t_inters = False
+                    for pt in enum_pts(pos, dims):
+                        if in_cube(pt, o_pos, o_dims):
+                            inters = True
+                            t_inters = True
+                    for o_pt in enum_pts(o_pos, o_dims):
+                        if in_cube(o_pt, pos, dims):
+                            inters = True
+                            t_inters = True
+                    if t_inters:
+                        if o_pos[2] + o_dims[2] > max_h:
+                            max_h = o_pos[2] + o_dims[2]
+                        if all_in_cube(pos, dims, o_pos, o_dims):
+                            self.full_occ_list[i].append(n)
+                        self.part_occ_list[i].append(n)
+                        self.c_grasps[i] = random.uniform(0.05, 0.4)
+                    inters = t_inters
+                if inters:
+                    pos[2] = max_h
+
+                self.positions.append(pos)
+                self.dimensions.append(dims)
+                if n == 0:
+                    self.colors.append("yellow")
+                else:
+                    self.colors.append(c_names[random.randint(0, len(c_names)-1)])
+                self.full_occ_list.append([])
+                self.part_occ_list.append([])
+                self.c_grasps.append(random.uniform(0.6, 0.95))
+                self.f_grasps.append(random.uniform(0.6, 0.95))
+
+            self.open_b, self.part_b = simulate_vision(self.numobjects, self.goalid)
             self.latticeids = range(1, self.numobjects+1)
 
     def set_vision(self, open_b, part_b):
