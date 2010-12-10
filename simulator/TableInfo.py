@@ -85,10 +85,10 @@ class TableInfo:
             self.colors = ["yellow", "blue", "green", "brown", "blue"]
             self.full_occ_list = [ [2], [2], [], [4], [] ]
             self.part_occ_list = [ [1, 2], [2], [], [4], [] ]
-            self.c_grasps = [ 0.9, 0.8, 0.7, 0.9, 0.8]
-            self.f_grasps = [ 0.9, 0.8, 0.7, 0.9, 0.8]
+            self.c_grasps = [ 0.9, 0.8, 0.7, 0.9, 0.7]
+            self.f_grasps = [ 0.9, 0.8, 0.7, 0.9, 0.7]
             self.open_b = [ 0.95, 0.2, 0.1, 0.5, 0.1 ]
-            self.part_b = [ 0.95, 0.2, 0.1, 0.5, 0.1 ]
+            self.part_b = [ 0.8, 0.2, 0.1, 0.5, 0.1 ]
             # self.focc_b = [ ]
             self.latticeids = range(1, self.numobjects+1)
         elif configId == 3: # Simple Horizontal Stacking (connected)
@@ -178,12 +178,34 @@ class TableInfo:
             self.colors = [ "black",
                             "yellow", "blue", "green", "red", "gray", "black",
                             "black", "blue" ]
-            self.full_occ_list = [ [], [2,3,4,5], [2,3,4,5], [],      [],    [],  [], [], [] ]
-            self.part_occ_list = [ [], [2,3,4,5], [2,3,4,5], [3,4,5], [4,5], [5], [], [], [] ]
-            self.c_grasps = [ 0.6, 0.9, 0.9, 0.2, 0.2, 0.3, 0.9, 0.7, 0.7 ]
-            self.f_grasps = [ 0.6, 0.9, 0.9, 0.8, 0.7, 0.8, 0.9, 0.7, 0.7 ]
+            self.full_occ_list = [ [], [3,4,5,6], [3,4,5,6], [],      [],    [],  [], [], [] ]
+            self.part_occ_list = [ [], [3,4,5,6], [3,4,5,6], [4,5,6], [5,6], [6], [], [], [] ]
+            self.c_grasps = [ 0.8, 0.9, 0.9, 0.2, 0.2, 0.3, 0.9, 0.7, 0.7 ]
+            self.f_grasps = [ 0.8, 0.9, 0.9, 0.8, 0.7, 0.8, 0.9, 0.7, 0.7 ]
             self.open_b = [ 0.1, 0.9, 0.1, 0.1, 0.2, 0.1, 0.1, 0.1, 0.1 ]
             self.part_b = [ 0.1, 0.9, 0.1, 0.2, 0.3, 0.2, 0.1, 0.1, 0.1 ]
+            self.latticeids = range(1, self.numobjects+1)
+        elif configId == 9: # Right side with block on top (for Kaushik)
+            # Wont work for QMDP & InfoGain
+            self.goalid = 7
+            self.numobjects = 12
+            self.ids = range(0, self.numobjects)
+            self.positions  = [ [110, 10, 0],  #obj before stack 1
+                                [120, 50, 0], [150, 50, 0], [110, 50, 20], [130, 50, 40], [110, 60, 70], [140, 50, 90],  # Stack 1
+                                [200, 60, 0], [200, 40, 0], [200, 20, 0], [200, 60, 20], [200, 60, 40]]# Stack 2
+            self.dimensions = [ [60, 30, 30],
+                                [20, 20, 20], [20, 20, 20], [70, 20, 20], [40, 30, 30], [70, 20, 20], [20, 20, 20],
+                                [20, 20, 20], [20, 20, 20], [20, 20, 20], [20, 20, 20], [20, 20, 20] ] # Right Stack
+            self.colors = [ "black",
+                            "brown", "blue", "green", "red", "gray", "black",
+                            "yellow", "blue", "red", "green", "gray" ]
+            # TODO: following values are wrong
+            self.full_occ_list = [ [], [3,4,5,6], [3,4,5,6], [],      [],    [],  [], [], [], [], [], [] ]
+            self.part_occ_list = [ [], [3,4,5,6], [3,4,5,6], [4,5,6], [5,6], [6], [], [], [], [], [], [] ]
+            self.c_grasps = [ 0.8, 0.9, 0.9, 0.2, 0.2, 0.3, 0.9, 0.7, 0.7, 0.0, 0.0, 0.0 ]
+            self.f_grasps = [ 0.8, 0.9, 0.9, 0.8, 0.7, 0.8, 0.9, 0.7, 0.7, 0.0, 0.0, 0.0 ]
+            self.open_b = [ 0.1, 0.9, 0.1, 0.1, 0.2, 0.1, 0.1, 0.1, 0.1, 0.0, 0.0, 0.0 ]
+            self.part_b = [ 0.1, 0.9, 0.1, 0.2, 0.3, 0.2, 0.1, 0.1, 0.1, 0.0, 0.0, 0.0 ]
             self.latticeids = range(1, self.numobjects+1)
         elif configId == 12: # Avoid difficult grasp
             # Complete for QMDP
@@ -388,15 +410,16 @@ class TableInfo:
 
     def get_visible_objects(self):
         tbl_objs = []
-        tbl_inds = []
+        #tbl_inds = []
         self.vis_ids = []
         for i in range(self.numobjects):
             # print "get_vis", i, self.full_occ_list[i]
             if len(self.full_occ_list[i]) != 0:
                 continue
+            # print "Lattice id , part :", self.latticeids[i], self.part_occ_list[i]
             new_tbl_obj = TableObject(self.latticeids[i], self.part_occ_list[i], False, False, self.c_grasps[i], self.f_grasps[i])
             tbl_objs.append(new_tbl_obj)
-            tbl_inds.append(i)
+            #tbl_inds.append(i)
             self.vis_ids.append(self.ids[i])
 
         for n_obj in tbl_objs:
@@ -407,8 +430,12 @@ class TableInfo:
             # self.printConf()
             for o_obst in n_obj.obstructors:
                 # print o_obst
-                n_obsts.append(tbl_objs[tbl_inds.index(self.ids.index(o_obst))])
+                for tbl_obj in tbl_objs:
+                    if tbl_obj.obj_id-1 == o_obst:
+                        n_obsts.append(tbl_obj)
+                #n_obsts.append(tbl_objs[tbl_inds.index(self.ids.index(o_obst))])
             n_obj.obstructors = n_obsts
+            # print "New Table object: ", n_obj
         tbl_objs.extend(self.get_moved_objects())
         return tbl_objs
 
@@ -464,9 +491,12 @@ class TableInfo:
         self.numobjects -= 1
         self.rem_numobjects += 1
         objId = self.ids.pop(index)
+        print "objid", objId, "index", index, "ids", self.ids
+        print "part before: ", self.part_occ_list
         for pol in self.part_occ_list:
             if pol.count(objId) > 0:
                 pol.remove(objId)
+        print "part after: ", self.part_occ_list
         for fol in self.full_occ_list:
             if fol.count(objId) > 0:
                 fol.remove(objId)
