@@ -272,6 +272,7 @@ class TableInfo:
     def get_visible_objects(self):
         tbl_objs = []
         tbl_inds = []
+        self.vis_ids = []
         for i in range(self.numobjects):
             # print "get_vis", i, self.full_occ_list[i]
             if len(self.full_occ_list[i]) != 0:
@@ -279,6 +280,7 @@ class TableInfo:
             new_tbl_obj = TableObject(self.latticeids[i], self.part_occ_list[i], False, False, self.c_grasps[i], self.f_grasps[i])
             tbl_objs.append(new_tbl_obj)
             tbl_inds.append(i)
+            self.vis_ids.append(self.ids[i])
 
         for n_obj in tbl_objs:
             n_obsts = []
@@ -300,9 +302,11 @@ class TableInfo:
         # print self.rem_c_grasps
         # print self.rem_f_grasps
         # print self.printConf()
+        self.rem_vis_ids = []
         for i in range(self.rem_numobjects):
             new_tbl_obj = TableObject(self.rem_latticeids[i], [], False, True, self.rem_c_grasps[i], self.rem_f_grasps[i])
             tbl_objs.append(new_tbl_obj)
+            self.rem_vis_ids.append(self.rem_ids[i])
         return tbl_objs
 
     def sortonY(self):

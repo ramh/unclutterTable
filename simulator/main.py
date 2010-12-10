@@ -107,8 +107,8 @@ class MainWindow(wx.Frame):
         dlg.Destroy()
 
     def OnExecStep(self, e):
-        visible_objects = tableinfo.get_visible_objects()
-        belief = tableinfo.get_current_belief(visible_objects)
+        visible_objects = self.tableinfo.get_visible_objects()
+        belief = self.tableinfo.get_current_belief(visible_objects)
         if(e.GetEventObject().GetId() == -1):
             planner_type = 0 #QMDP=0
         else:
