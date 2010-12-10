@@ -14,7 +14,7 @@ class TableInfo:
         if goalInd!= -1:
             self.goalid = goalInd
         self.goal_vol = self.get_goal_vol()
-        self.printConf()
+        # self.printConf()
         self.init_rem_objs()
 
     def init_rem_objs(self):
@@ -205,8 +205,8 @@ class TableInfo:
         CLUTTER_CONST = 1.0 / 180000.
         BUFFER = 5000.
         occ_vol = self.get_occ_vol(ind)
-        print "occ_vol", ind, occ_vol
-        print "goal_vol", ind, self.goal_vol
+        # print "occ_vol", ind, occ_vol
+        # print "goal_vol", ind, self.goal_vol
         return CLUTTER_CONST * occ_vol * max((1. - self.goal_vol / (occ_vol + BUFFER)), 0.)
 
     def joint_belief(self, obj_bel):
@@ -234,7 +234,7 @@ class TableInfo:
             out_b[i] = b_i / sum_arr
         return out_b
 
-    def get_current_belief(self, vis_objs):
+    def get_current_belief(self, vis_objs, debug=False):
         #print "visible objs", ", ".join([vis_obj.__str__() for vis_obj in vis_objs])
         #self.printConf()
         obj_bel = [0.] * (len(vis_objs) * 2)
@@ -262,9 +262,12 @@ class TableInfo:
                 full_occ_bel = 0.
             obj_bel[i + len(vis_objs)] = full_occ_bel
 
-        print "Object recog probs:\n\t", "\n\t".join(["%2d %1.3f" % (i, o_i) for i, o_i in enumerate(obj_bel)])
+        debug = True
+        if debug:
+            print "Object recog probs:\n\t", "\n\t".join(["%2d %1.3f" % (i, o_i) for i, o_i in enumerate(obj_bel)])
         joint_bel = self.joint_belief(obj_bel)
-        print "Joint belief:\n\t", "\n\t".join(["%2d %1.3f" % (i, o_i) for i, o_i in enumerate(joint_bel)])
+        if debug:
+            print "Joint belief:\n\t", "\n\t".join(["%2d %1.3f" % (i, o_i) for i, o_i in enumerate(joint_bel)])
         return joint_bel
 
     def get_visible_objects(self):
@@ -280,19 +283,24 @@ class TableInfo:
 
         for n_obj in tbl_objs:
             n_obsts = []
+            # print n_obj.obstructors
+            # print "full", self.full_occ_list
+            # print "part", self.part_occ_list
+            # self.printConf()
             for o_obst in n_obj.obstructors:
-                n_obsts.append(tbl_objs[tbl_inds.index(self.latticeids.index(o_obst))])
+                # print o_obst
+                n_obsts.append(tbl_objs[tbl_inds.index(self.ids.index(o_obst))])
             n_obj.obstructors = n_obsts
         tbl_objs.extend(self.get_moved_objects())
         return tbl_objs
 
     def get_moved_objects(self):
         tbl_objs = []
-        print self.rem_numobjects
-        print self.rem_latticeids
-        print self.rem_c_grasps
-        print self.rem_f_grasps
-        print self.printConf()
+        # print self.rem_numobjects
+        # print self.rem_latticeids
+        # print self.rem_c_grasps
+        # print self.rem_f_grasps
+        # print self.printConf()
         for i in range(self.rem_numobjects):
             new_tbl_obj = TableObject(self.rem_latticeids[i], [], False, True, self.rem_c_grasps[i], self.rem_f_grasps[i])
             tbl_objs.append(new_tbl_obj)
@@ -336,6 +344,13 @@ class TableInfo:
         self.numobjects -= 1
         self.rem_numobjects += 1
         objId = self.ids.pop(index)
+        for pol in self.part_occ_list:
+            if pol.count(objId) > 0:
+                pol.remove(objId)
+        for fol in self.full_occ_list:
+            if fol.count(objId) > 0:
+                fol.remove(objId)
+
         self.rem_ids.append(objId)
         x, y, z = self.positions.pop(index)
         x_offset = 50 * (self.rem_numobjects-1)
@@ -349,13 +364,8 @@ class TableInfo:
         self.rem_f_grasps.append(self.f_grasps.pop(index))
         self.rem_open_b.append(self.open_b.pop(index))
         self.rem_part_b.append(self.part_b.pop(index))
-
-        for pol in self.part_occ_list:
-            if pol.count(objId) > 0:
-                pol.remove(objId)
-        for fol in self.full_occ_list:
-            if fol.count(objId) > 0:
-                fol.remove(objId)
+        self.rem_full_occ_list = [[]]*len(self.rem_full_occ_list)
+        self.rem_part_occ_list = [[]]*len(self.rem_part_occ_list)
 
     def printConf(self):
         print "Numobjects : %s" % self.numobjects
@@ -376,5 +386,5 @@ class TableInfo:
 
 
 # Instantiate TableInfo
-tableinfo = TableInfo(configId=int(sys.argv[1]))
+# tableinfo = TableInfo(configId=int(sys.argv[1]))
 #tableinfo = TableInfo()

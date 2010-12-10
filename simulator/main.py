@@ -8,7 +8,12 @@ from qmdp.state_rep import *
 from qmdp.qmdp import *
 
 class MainWindow(wx.Frame):
-    def __init__(self, parent, title):
+    def __init__(self, parent, title, config_id, goal_id = None):
+        
+        if goal_id is None:
+            self.tableinfo = TableInfo(config_id)
+        else:
+            self.tableinfo = TableInfo(config_id, goal_id)
         self.dirname=''
         wx.Frame.__init__(self, parent, title=title, size=(900,700))
         self.control = wx.TextCtrl(self, style=wx.TE_MULTILINE)
@@ -57,8 +62,8 @@ class MainWindow(wx.Frame):
         self.toolbox1 = wx.BoxSizer(wx.HORIZONTAL)
         label = wx.StaticText(self, -1, "POMDP Solve: Remove => ")
         self.toolbox1.Add(label)
-        for i in range(0, tableinfo.numobjects):
-            buttonRemove = wx.Button(self, i, "Obj %d(%s)" % (i , tableinfo.colors[i]))
+        for i in range(0, self.tableinfo.numobjects):
+            buttonRemove = wx.Button(self, i, "Obj %d(%s)" % (i , self.tableinfo.colors[i]))
             self.Bind(wx.EVT_BUTTON, self.OnRemove, buttonRemove)
             self.buttons.append(buttonRemove)
             self.toolbox1.Add(buttonRemove, 1, wx.EXPAND)
@@ -102,8 +107,8 @@ class MainWindow(wx.Frame):
         dlg.Destroy()
 
     def OnExecStep(self, e):
-        visible_objects = tableinfo.get_visible_objects()
-        belief = tableinfo.get_current_belief(visible_objects)
+        visible_objects = self.tableinfo.get_visible_objects()
+        belief = self.tableinfo.get_current_belief(visible_objects)
         planner_type = e.GetEventObject().GetId() #QMDP=0, InfoGain=1
         print "EXECUTE PLANNING Input: ", belief, visible_objects, planner_type
         print ", ".join([vis_obj.__str__() for vis_obj in visible_objects])
@@ -115,17 +120,17 @@ class MainWindow(wx.Frame):
         if latticeInd==0:
             content = "I am no longer going to search for the object"
         elif latticeInd<0:
-            if -latticeInd in tableinfo.latticeids:
-                index = tableinfo.latticeids.index(-latticeInd)
-                content = "Goal Object found: %d" % (tableinfo.ids[index])
-            elif -latticeInd in tableinfo.rem_latticeids:
-                index = tableinfo.rem_latticeids.index(-latticeInd)
-                content = "Goal Object found: %d" % (tableinfo.rem_ids[index])
+            if -latticeInd in self.tableinfo.latticeids:
+                index = self.tableinfo.latticeids.index(-latticeInd)
+                content = "Goal Object found: %d" % (self.tableinfo.ids[index])
+            elif -latticeInd in self.tableinfo.rem_latticeids:
+                index = self.tableinfo.rem_latticeids.index(-latticeInd)
+                content = "Goal Object found: %d" % (self.tableinfo.rem_ids[index])
         else:
             # Chance of successful removal of object = Full Graspability probability
-            index = tableinfo.latticeids.index(latticeInd)
-            objId = tableinfo.ids[index]
-            prob = tableinfo.f_grasps[index]
+            index = self.tableinfo.latticeids.index(latticeInd)
+            objId = self.tableinfo.ids[index]
+            prob = self.tableinfo.f_grasps[index]
             rand = random.random()
             if rand < prob:
                 content = "Removed Object: %d" % (objId)
@@ -137,17 +142,26 @@ class MainWindow(wx.Frame):
 
     def OnRemove(self, e):
         objId = e.GetEventObject().GetId()
-        index = tableinfo.ids.index(objId)
-        tableinfo.removeObject(index)
+        index = self.tableinfo.ids.index(objId)
+        self.tableinfo.removeObject(index)
         self.buttons[objId].Hide()
         self.drawTable()
 
     def removeObject(self, index):
-        objId = tableinfo.ids[index]
-        tableinfo.removeObject(index)
+        objId = self.tableinfo.ids[index]
+        self.tableinfo.removeObject(index)
         self.buttons[objId].Hide()
         self.drawTable()
 
-app = wx.App(False)
-frame = MainWindow(None, "Table 2D simulator - clutter table manipulation")
-app.MainLoop()
+if __name__ == "__main__":
+    app = wx.App(False)
+    if len(sys.argv) > 2:
+        configId = int(sys.argv[1])
+        goalId = int(sys.argv[2])
+        frame = MainWindow(None, "Table 2D simulator - clutter table manipulation", configId, goalId)
+    elif len(sys.argv) > 1:
+        configId = int(sys.argv[1])
+        frame = MainWindow(None, "Table 2D simulator - clutter table manipulation", configId)
+    else:
+        frame = MainWindow(None, "Table 2D simulator - clutter table manipulation", 3)
+    app.MainLoop()

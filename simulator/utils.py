@@ -1,3 +1,4 @@
+import random
 
 def half_gauss(sigma=0.07):
     while True:
